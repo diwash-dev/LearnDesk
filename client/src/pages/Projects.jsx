@@ -15,7 +15,7 @@ import Footer from "../components/Footer.jsx";
 const ORDINALS = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
 
 /* ---------- Sample data ----------
-   "Title|description|type|technologies". Replace with an API call later. */
+  "Title|description|type". Replace with an API call later. */
 const raw = {
   4: [
     "Online Examination System|Timed multiple-choice tests with automatic result generation.|Project I|PHP,MySQL,Bootstrap",
@@ -34,7 +34,7 @@ const raw = {
 };
 
 // [name, description, file type, base page count]
-const DOCS = [
+export const DOCS = [
   ["Project Proposal", "Problem, objectives, scope and timeline", "DOCX", 6],
   ["Project Documentation", "Design, modules and implementation", "PDF", 24],
   ["Project Report", "Final report with results and conclusion", "PDF", 48],
@@ -46,16 +46,15 @@ const DOCS = [
   ],
 ];
 
-const projects = Object.entries(raw).flatMap(([sem, list]) =>
+export const projects = Object.entries(raw).flatMap(([sem, list]) =>
   list.map((line, i) => {
-    const [title, description, type, tech] = line.split("|");
+    const [title, description, type] = line.split("|");
     return {
       id: `${sem}-${i}`,
       semester: Number(sem),
       title,
       description,
       type,
-      technologies: tech.split(","),
       documents: DOCS.map(([name, text, fileType, base]) => ({
         name,
         text,
@@ -123,13 +122,6 @@ function ProjectCard({ p, onOpen }) {
       <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
         {p.description}
       </p>
-      <ul className="mt-3 flex flex-wrap gap-1.5">
-        {p.technologies.map((t) => (
-          <li key={t} className={chip}>
-            {t}
-          </li>
-        ))}
-      </ul>
       <button
         type="button"
         onClick={() => onOpen(p)}
@@ -170,16 +162,6 @@ function ProjectDetail({ p, onBack }) {
             <div>
               <dt className="text-xs text-slate-500">Project type</dt>
               <dd className="mt-1 text-sm font-semibold text-ink">{p.type}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">Technologies</dt>
-              <dd className="mt-1.5 flex flex-wrap gap-1.5">
-                {p.technologies.map((t) => (
-                  <span key={t} className={chip}>
-                    {t}
-                  </span>
-                ))}
-              </dd>
             </div>
           </dl>
         </div>

@@ -13,6 +13,8 @@ import AllSyllabus from "./components/admin/Allsyllabus.jsx";
 import AddSyllabus from "./components/admin/Addsyllabus.jsx";
 import AddQuestionPaper from "./components/admin/Addquestionpaper.jsx";
 import AllQuestionPapers from "./components/admin/Allquestionpapers.jsx";
+import AllProjects from "./components/admin/Allprojects.jsx";
+import AddProject from "./components/admin/Addproject.jsx";
 
 function App() {
   return (
@@ -44,6 +46,10 @@ function App() {
           path="/admin/question-papers/:id/edit"
           element={<AddQuestionPaper />}
         />
+
+        <Route path="/admin/projects" element={<AllProjects />} />
+        <Route path="/admin/projects/new" element={<AddProject />} />
+        <Route path="/admin/projects/:id/edit" element={<AddProject />} />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

@@ -3,7 +3,14 @@ import { Layers, LayoutDashboard, LogOut, Settings, X } from "lucide-react";
 import { Logo } from "../Navbar.jsx";
 import { categoryIcons } from "../ResourceCard.jsx";
 
-// Only Dashboard has a page so far; everything else is a placeholder for later steps.
+// Labels listed in `links` have an admin page; the rest are placeholders for later steps.
+const links = {
+  Notes: "/admin/notes",
+  Syllabus: "/admin/syllabus",
+  "Question Papers": "/admin/question-papers",
+  Projects: "/admin/projects",
+};
+
 const groups = [
   {
     title: "Content",
@@ -67,17 +74,9 @@ export default function AdminSidebar({ open, onClose }) {
             <ul className="space-y-0.5">
               {items.map(({ label, icon: Icon }) => (
                 <li key={label}>
-                  {label === "Notes" ||
-                  label === "Syllabus" ||
-                  label === "Question Papers" ? (
+                  {links[label] ? (
                     <NavLink
-                      to={
-                        label === "Notes"
-                          ? "/admin/notes"
-                          : label === "Syllabus"
-                            ? "/admin/syllabus"
-                            : "/admin/question-papers"
-                      }
+                      to={links[label]}
                       onClick={onClose}
                       className={({ isActive }) =>
                         `${item} ${isActive ? "bg-brand-50 text-brand-700" : idle}`
