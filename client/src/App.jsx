@@ -5,6 +5,10 @@ import Notes from "./pages/Notes.jsx";
 import QuestionPapers from "./pages/QuestionPapers.jsx";
 import LabReports from "./pages/Labreports.jsx";
 import Projects from "./pages/Projects.jsx";
+import Dashboard from "./components/admin/Dashboard.jsx";
+import AllNotes from "./components/admin/Allnotes.jsx";
+import NoteForm from "./components/admin/Noteform.jsx";
+import AdminLogin from "./pages/AdminLogin.jsx";
 
 function App() {
   return (
@@ -23,6 +27,15 @@ function App() {
         />
         <Route path="/lab-reports" element={<LabReports />} />
         <Route path="/projects" element={<Projects />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/admin/notes" element={<AllNotes />} />
+        <Route path="/admin/notes/new" element={<NoteForm />} />
+        <Route path="/admin/notes/:id/edit" element={<NoteForm />} />
+
+        {/* 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

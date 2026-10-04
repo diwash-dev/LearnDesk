@@ -17,7 +17,7 @@ import Footer from "../components/Footer.jsx";
    Later: replace `files` with a fetch to the Express API (GET /api/notes).
    Every file keeps the same shape the backend can return:
    { id, semester, subject, title, description, unit, type, resourceType, pages, size, fileUrl, date }
-   resourceType: notes | important | other
+  resourceType: notes | other
    fileUrl will point to the file stored on Cloudinary. */
 
 // [subject, short name, "unit 1|unit 2|unit 3", extra file kind]
@@ -312,8 +312,8 @@ const slugify = (s) =>
     .replace(/^-+|-+$/g, "");
 
 // Builds `files` (flat list) and `catalog` (semester -> subjects with their files).
-const files = [];
-const catalog = {};
+export const files = [];
+export const catalog = {};
 let nextId = 1;
 const baseDate = Date.UTC(2026, 9, 3);
 
@@ -330,14 +330,6 @@ Object.entries(raw).forEach(([semKey, list]) => {
         type: "PDF",
         resourceType: "notes",
       })),
-      {
-        title: `${short} Important Questions`,
-        description:
-          "Frequently asked exam questions with model answers from past papers.",
-        unit: null,
-        type: "PDF",
-        resourceType: "important",
-      },
       {
         title: `${short} ${extra.suffix}`,
         description: extra.text,
@@ -379,15 +371,25 @@ Object.entries(raw).forEach(([semKey, list]) => {
         .map((f) => f.date)
         .sort()
         .pop(),
-      description: `Unit-wise notes, important questions and ${extra.label} for ${subject}.`,
+      description: `Unit-wise notes and ${extra.label} for ${subject}.`,
     });
   });
 });
 
-const ordinal = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
-const semesterNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
+export const ordinal = [
+  "",
+  "1st",
+  "2nd",
+  "3rd",
+  "4th",
+  "5th",
+  "6th",
+  "7th",
+  "8th",
+];
+export const semesterNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
 const fileCount = (n) => catalog[n].reduce((sum, s) => sum + s.files.length, 0);
-const fmtDate = (iso) =>
+export const fmtDate = (iso) =>
   new Date(iso).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -399,7 +401,6 @@ const fmtDate = (iso) =>
 const resourceTypes = [
   { value: "all", label: "All" },
   { value: "notes", label: "Notes" },
-  { value: "important", label: "Important Notes" },
   { value: "other", label: "Other" },
 ];
 
@@ -465,8 +466,8 @@ export default function Notes() {
               BCA Notes
             </h1>
             <p className="mt-3 max-w-2xl text-lg leading-relaxed text-slate-600">
-              Unit-wise notes, important questions, assignments and lab material
-              for every BCA subject, organized by semester.
+              Unit-wise notes, assignments and lab material for every BCA
+              subject, organized by semester.
             </p>
           </div>
         </section>
