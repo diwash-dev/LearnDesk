@@ -28,12 +28,19 @@ const resourceMenus = [
   "Projects",
 ];
 
-const routes = { Syllabus: "/syllabus", Notes: "/notes", "Question Papers": "/question-papers" };
+const routes = {
+  Syllabus: "/syllabus",
+  Notes: "/notes",
+  "Question Papers": "/question-papers",
+  "Lab Reports": "/lab-reports",
+};
 const allHref = (name) => routes[name] ?? "#";
 const semHref = (name, n) => {
   if (name === "Syllabus") return `/syllabus/${n}`;
   if (name === "Notes") return `/notes?semester=${n}`;
   if (name === "Question Papers") return `/question-papers/${n}`;
+if (name === "Lab Reports") return `/lab-reports?semester=${n}`;
+
   return "#";
 };
 

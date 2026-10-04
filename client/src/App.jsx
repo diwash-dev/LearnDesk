@@ -3,6 +3,7 @@ import Home from "./Home";
 import Syllabus from "./pages/Syllabus.jsx";
 import Notes from "./pages/Notes.jsx";
 import QuestionPapers from "./pages/QuestionPapers.jsx";
+import LabReports from "./pages/Labreports.jsx";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           path="/question-papers/:semester/:slug"
           element={<QuestionPapers />}
         />
+        <Route path="/lab-reports" element={<LabReports />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
