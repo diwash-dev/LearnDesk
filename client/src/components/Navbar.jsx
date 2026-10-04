@@ -16,7 +16,7 @@ import { categoryIcons } from "./ResourceCard.jsx";
 
 const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
 
-// Each of these opens a Semester 1-8 menu. Only Syllabus has real routes so far;
+// Each of these opens a Semester 1-8 menu. Only Syllabus and Notes have real routes so far;
 // the others stay "#" placeholders until their pages exist.
 const resourceMenus = [
   "Notes",
@@ -26,8 +26,13 @@ const resourceMenus = [
   "Projects",
 ];
 
-const allHref = (name) => (name === "Syllabus" ? "/syllabus" : "#");
-const semHref = (name, n) => (name === "Syllabus" ? `/syllabus/${n}` : "#");
+const routes = { Syllabus: "/syllabus", Notes: "/notes" };
+const allHref = (name) => routes[name] ?? "#";
+const semHref = (name, n) => {
+  if (name === "Syllabus") return `/syllabus/${n}`;
+  if (name === "Notes") return `/notes?semester=${n}`;
+  return "#";
+};
 
 // Internal routes use <Link>, placeholders stay plain anchors.
 function A({ href, ...props }) {
@@ -144,10 +149,10 @@ export default function Navbar() {
                   className={`${navItem} ${isOpen ? "bg-brand-50 !text-brand-700" : ""}`}
                   aria-expanded={isOpen}
                   onClick={() => {
-                    // Clicking "Syllabus" itself opens the Syllabus page
-                    if (name === "Syllabus") {
+                    // Clicking "Syllabus" or "Notes" itself opens its page
+                    if (routes[name]) {
                       closeAll();
-                      navigate("/syllabus");
+                      navigate(routes[name]);
                     } else {
                       setOpen(isOpen ? null : name);
                     }
@@ -194,7 +199,7 @@ export default function Navbar() {
                         onClick={closeAll}
                         className="mt-3 flex items-center justify-between rounded-lg bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100"
                       >
-                        {name === "Syllabus" ? "All Semesters" : `All ${name}`}
+                        {routes[name] ? "All Semesters" : `All ${name}`}
                         <ArrowRight size={14} />
                       </A>
                     </div>
@@ -355,9 +360,7 @@ export default function Navbar() {
                               onClick={closeAll}
                               className="col-span-4 flex items-center justify-between rounded-md bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-700"
                             >
-                              {name === "Syllabus"
-                                ? "All Semesters"
-                                : `All ${name}`}
+                              {routes[name] ? "All Semesters" : `All ${name}`}
                               <ArrowRight size={14} />
                             </A>
                             {semesters.map((n) => (

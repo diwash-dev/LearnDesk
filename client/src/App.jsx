@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./Home";
 import Syllabus from "./pages/Syllabus.jsx";
+import Notes from "./pages/Notes.jsx";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <Route path="/syllabus" element={<Syllabus />} />
         <Route path="/syllabus/:semester" element={<Syllabus />} />
         <Route path="/syllabus/:semester/:slug" element={<Syllabus />} />
+        <Route path = "/notes" element={<Notes />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
