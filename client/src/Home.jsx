@@ -12,6 +12,7 @@ import {
   Library,
   Zap,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import ResourceCard, { categoryIcons } from "./components/ResourceCard.jsx";
@@ -395,11 +396,11 @@ export default function Home() {
                 {restCategories.map((c) => {
                   const Icon = categoryIcons[c.title];
                   return (
-                    <a
-                      key={c.title}
-                      href="#"
-                      className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-brand-50/70"
-                    >
+                  <Link
+  key={c.title}
+  to={c.title === "Syllabus" ? "/syllabus" : "#"}
+  className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-brand-50/70"
+>
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 transition-colors group-hover:bg-white">
                         <Icon size={20} />
                       </span>
@@ -418,7 +419,7 @@ export default function Home() {
                         size={16}
                         className="shrink-0 text-slate-300 transition group-hover:translate-x-1 group-hover:text-brand-600"
                       />
-                    </a>
+                    </Link>
                   );
                 })}
               </div>

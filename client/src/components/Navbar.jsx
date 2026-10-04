@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   ChevronDown,
@@ -15,7 +16,8 @@ import { categoryIcons } from "./ResourceCard.jsx";
 
 const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
 
-// Each of these opens a Semester 1-8 menu. Links are placeholders until routes exist.
+// Each of these opens a Semester 1-8 menu. Only Syllabus has real routes so far;
+// the others stay "#" placeholders until their pages exist.
 const resourceMenus = [
   "Notes",
   "Syllabus",
@@ -23,6 +25,18 @@ const resourceMenus = [
   "Lab Reports",
   "Projects",
 ];
+
+const allHref = (name) => (name === "Syllabus" ? "/syllabus" : "#");
+const semHref = (name, n) => (name === "Syllabus" ? `/syllabus/${n}` : "#");
+
+// Internal routes use <Link>, placeholders stay plain anchors.
+function A({ href, ...props }) {
+  return href.startsWith("/") ? (
+    <Link to={href} {...props} />
+  ) : (
+    <a href={href} {...props} />
+  );
+}
 
 const moreLinks = [
   {
@@ -39,8 +53,8 @@ const moreLinks = [
 // Logo mark: a document with a folded corner and a graduation cap line
 export function Logo({ dark = false }) {
   return (
-    <a
-      href="#"
+    <Link
+      to="/"
       className="flex items-center gap-2.5"
       aria-label="LearnDesk home"
     >
@@ -79,7 +93,7 @@ export function Logo({ dark = false }) {
         Learn
         <span className={dark ? "text-brand-300" : "text-brand-600"}>Desk</span>
       </span>
-    </a>
+    </Link>
   );
 }
 
@@ -87,9 +101,15 @@ const navItem =
   "flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-brand-50 hover:text-brand-700";
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(null); // desktop: which menu is open
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expanded, setExpanded] = useState(null); // mobile: which category is expanded
+
+  const closeAll = () => {
+    setOpen(null);
+    setMobileOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white">
@@ -103,13 +123,13 @@ export default function Navbar() {
           onMouseLeave={() => setOpen(null)}
           onKeyDown={(e) => e.key === "Escape" && setOpen(null)}
         >
-          <a
-            href="#"
+          <Link
+            to="/"
             className={`${navItem} !text-brand-700`}
             onMouseEnter={() => setOpen(null)}
           >
             Home
-          </a>
+          </Link>
 
           {resourceMenus.map((name) => {
             const Icon = categoryIcons[name];
@@ -123,7 +143,15 @@ export default function Navbar() {
                 <button
                   className={`${navItem} ${isOpen ? "bg-brand-50 !text-brand-700" : ""}`}
                   aria-expanded={isOpen}
-                  onClick={() => setOpen(isOpen ? null : name)}
+                  onClick={() => {
+                    // Clicking "Syllabus" itself opens the Syllabus page
+                    if (name === "Syllabus") {
+                      closeAll();
+                      navigate("/syllabus");
+                    } else {
+                      setOpen(isOpen ? null : name);
+                    }
+                  }}
                 >
                   {name}
                   <ChevronDown
@@ -146,9 +174,10 @@ export default function Navbar() {
                       </div>
                       <div className="grid grid-cols-4 gap-2">
                         {semesters.map((n) => (
-                          <a
+                          <A
                             key={n}
-                            href="#"
+                            href={semHref(name, n)}
+                            onClick={closeAll}
                             className="group rounded-lg border border-line px-2 py-2 text-center transition-colors hover:border-brand-300 hover:bg-brand-50"
                           >
                             <span className="block text-[11px] text-slate-500">
@@ -157,16 +186,17 @@ export default function Navbar() {
                             <span className="block text-lg font-bold leading-6 text-ink group-hover:text-brand-700">
                               {n}
                             </span>
-                          </a>
+                          </A>
                         ))}
                       </div>
-                      <a
-                        href="#"
+                      <A
+                        href={allHref(name)}
+                        onClick={closeAll}
                         className="mt-3 flex items-center justify-between rounded-lg bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100"
                       >
-                        All {name}
+                        {name === "Syllabus" ? "All Semesters" : `All ${name}`}
                         <ArrowRight size={14} />
-                      </a>
+                      </A>
                     </div>
                   </div>
                 )}
@@ -230,8 +260,9 @@ export default function Navbar() {
             <LogIn size={15} />
             Admin Login
           </a>
+          {/* Plain anchor so "/#categories" also works from other pages */}
           <a
-            href="#categories"
+            href="/#categories"
             className="hidden rounded-md bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 xl:block"
           >
             Browse Resources
@@ -265,12 +296,13 @@ export default function Navbar() {
 
             <ul className="mt-3 divide-y divide-line">
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/"
+                  onClick={closeAll}
                   className="block py-3 text-[15px] font-semibold text-brand-700"
                 >
                   Home
-                </a>
+                </Link>
               </li>
 
               {[...resourceMenus, "More"].map((name) => {
@@ -318,14 +350,25 @@ export default function Navbar() {
                           </ul>
                         ) : (
                           <div className="grid grid-cols-4 gap-2 pb-4">
+                            <A
+                              href={allHref(name)}
+                              onClick={closeAll}
+                              className="col-span-4 flex items-center justify-between rounded-md bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-700"
+                            >
+                              {name === "Syllabus"
+                                ? "All Semesters"
+                                : `All ${name}`}
+                              <ArrowRight size={14} />
+                            </A>
                             {semesters.map((n) => (
-                              <a
+                              <A
                                 key={n}
-                                href="#"
+                                href={semHref(name, n)}
+                                onClick={closeAll}
                                 className="rounded-md border border-line py-2 text-center text-sm font-semibold text-ink hover:border-brand-300 hover:bg-brand-50"
                               >
                                 Sem {n}
-                              </a>
+                              </A>
                             ))}
                           </div>
                         )}
