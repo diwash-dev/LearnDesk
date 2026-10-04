@@ -15,6 +15,9 @@ import AddQuestionPaper from "./components/admin/Addquestionpaper.jsx";
 import AllQuestionPapers from "./components/admin/Allquestionpapers.jsx";
 import AllProjects from "./components/admin/Allprojects.jsx";
 import AddProject from "./components/admin/Addproject.jsx";
+import AddLabReport from "./components/admin/Addlabreport.jsx";
+import AllLabReports from "./components/admin/Alllabreports.jsx";
+import Settings from "./components/admin/Settings.jsx";
 
 function App() {
   return (
@@ -50,6 +53,17 @@ function App() {
         <Route path="/admin/projects" element={<AllProjects />} />
         <Route path="/admin/projects/new" element={<AddProject />} />
         <Route path="/admin/projects/:id/edit" element={<AddProject />} />
+        <Route path="/admin/settings" element={<Settings />} />
+
+        <Route path="/admin/lab-reports" element={<AllLabReports />} />
+        <Route
+          path="/admin/lab-reports/new"
+          element={<AddLabReport key="new" />}
+        />
+        <Route
+          path="/admin/lab-reports/:id/edit"
+          element={<AddLabReport key="edit" />}
+        />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

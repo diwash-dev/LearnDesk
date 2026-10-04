@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
+  ArrowLeft,
+  ArrowRight,
   ChevronRight,
   Download,
   Eye,
   FileText,
-  FlaskConical,
   Info,
 } from "lucide-react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 
-// "Title|short description" -> expanded into full report objects below.
+/* ---------- Sample data ----------
+   "Title|short description" -> expanded into full report objects below.
+   `subjects` and `fmt` are exported so the admin Lab Reports pages use the same data.
+   Replace with an API call later (GET /api/lab-reports). */
 const raw = {
   1: {
     "Computer Fundamentals & Applications": [
@@ -154,7 +158,7 @@ const raw = {
 };
 
 // Build report objects. Dates, sizes and page counts are deterministic dummy values.
-const subjects = Object.entries(raw).flatMap(([sem, subs]) =>
+export const subjects = Object.entries(raw).flatMap(([sem, subs]) =>
   Object.entries(subs).map(([name, list], si) => {
     const reports = list.map((line, i) => {
       const [title, description] = line.split("|");
@@ -184,7 +188,7 @@ const subjects = Object.entries(raw).flatMap(([sem, subs]) =>
   }),
 );
 
-const fmt = (d) =>
+export const fmt = (d) =>
   d.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
@@ -194,189 +198,256 @@ const fmt = (d) =>
 const sampleNote =
   "Sample data for demonstration. Reports, dates and file details are placeholders.";
 
-function PageHeader({ title, text, facts }) {
+/* ---------- Pieces (same design as the Projects page) ---------- */
+
+function PageHeader({ crumbs, title, text }) {
   return (
     <section className="border-b border-line bg-surface">
       <div className="wrap py-10 sm:py-12">
         <nav aria-label="Breadcrumb" className="text-sm text-slate-500">
           <ol className="flex flex-wrap items-center gap-1.5">
-            <li className="flex items-center gap-1.5">
-              <Link to="/" className="hover:text-brand-700">
-                Home
-              </Link>
-              <ChevronRight size={14} />
-            </li>
-            <li className="font-medium text-ink">Lab Reports</li>
+            {crumbs.map((c, i) => (
+              <li key={c.label} className="flex items-center gap-1.5">
+                {i > 0 && <ChevronRight size={14} />}
+                {c.href ? (
+                  <Link to={c.href} className="hover:text-brand-700">
+                    {c.label}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-ink">{c.label}</span>
+                )}
+              </li>
+            ))}
           </ol>
         </nav>
         <h1 className="mt-5 text-4xl font-extrabold leading-tight text-ink sm:text-5xl">
           {title}
         </h1>
-        <p className="mt-3 max-w-2xl text-lg text-slate-600">{text}</p>
-        <ul className="mt-5 flex flex-wrap gap-2 text-sm text-slate-600">
-          {facts.map((f) => (
-            <li
-              key={f}
-              className="rounded-md border border-line bg-white px-3 py-1.5"
-            >
-              {f}
-            </li>
-          ))}
-        </ul>
+        {text && (
+          <p className="mt-3 max-w-2xl text-lg text-slate-600">{text}</p>
+        )}
       </div>
     </section>
   );
 }
 
-function ReportRow({ r }) {
+const chip =
+  "rounded border border-line bg-surface px-2 py-0.5 text-xs font-medium text-slate-600";
+
+function SubjectCard({ s, onOpen }) {
+  const titles = s.reports.slice(0, 3);
   return (
-    <li className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
-      <div className="flex min-w-0 flex-1 items-start gap-3.5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-brand-600">
-          <FileText size={18} />
+    <li className="flex flex-col rounded-xl border border-line bg-white p-5 shadow-soft transition-colors hover:border-brand-300">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">
+          Semester {s.semester}
         </span>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-brand-700">{r.no}</p>
-          <h3 className="text-[15px] font-semibold leading-snug text-ink">
+        <span className="rounded border border-line px-2 py-0.5 text-xs font-semibold text-slate-600">
+          {s.reports.length} lab reports
+        </span>
+      </div>
+      <h3 className="mt-3 text-lg font-bold leading-snug text-ink">{s.name}</h3>
+      <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+        Lab experiments and reports for {s.name}.
+      </p>
+      <ul className="mt-3 flex flex-wrap gap-1.5">
+        {titles.map((r) => (
+          <li key={r.no} className={chip}>
             {r.title}
-          </h3>
-          <p className="mt-0.5 text-sm text-slate-600">{r.description}</p>
-          <p className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
-            <span className="rounded border border-line bg-white px-1.5 py-0.5 font-semibold text-slate-600">
-              {r.fileType}
-            </span>
-            <span>{r.pages} pages</span>
-            <span className="text-slate-300">|</span>
-            <span>{fmt(r.updated)}</span>
-          </p>
-        </div>
-      </div>
-      <div className="flex gap-2 sm:shrink-0">
-        <a
-          href={r.fileUrl}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 sm:flex-none"
-        >
-          <Eye size={15} />
-          View
-        </a>
-        <a
-          href={r.fileUrl}
-          download
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50 sm:flex-none"
-        >
-          <Download size={15} />
-          Download
-        </a>
-      </div>
+          </li>
+        ))}
+        {s.reports.length > titles.length && (
+          <li className={chip}>+{s.reports.length - titles.length} more</li>
+        )}
+      </ul>
+      <button
+        type="button"
+        onClick={() => onOpen(s)}
+        className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+      >
+        View Lab Reports
+        <ArrowRight size={15} />
+      </button>
     </li>
   );
 }
 
+function SubjectDetail({ s, onBack }) {
+  const types = [...new Set(s.reports.map((r) => r.fileType))].join(", ");
+  return (
+    <section className="bg-white py-10 lg:py-14">
+      <div className="wrap">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
+        >
+          <ArrowLeft size={15} />
+          All subjects
+        </button>
+
+        <div className="mt-4 rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6">
+          <p className="text-sm font-semibold text-ink">About this subject</p>
+          <p className="mt-2 max-w-3xl leading-relaxed text-slate-600">
+            Lab experiments and reports for {s.name}.
+          </p>
+          <dl className="mt-5 grid gap-4 border-t border-line pt-5 sm:grid-cols-3">
+            <div>
+              <dt className="text-xs text-slate-500">Semester</dt>
+              <dd className="mt-1 text-sm font-semibold text-ink">
+                Semester {s.semester}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-slate-500">Lab reports</dt>
+              <dd className="mt-1 text-sm font-semibold text-ink">
+                {s.reports.length} reports
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-slate-500">File types</dt>
+              <dd className="mt-1 text-sm font-semibold text-ink">{types}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="mt-8 flex items-baseline justify-between gap-4">
+          <h2 className="text-xl font-bold text-ink">Lab reports</h2>
+          <p className="text-sm text-slate-500">{s.reports.length} files</p>
+        </div>
+
+        <ul className="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-white shadow-soft">
+          {s.reports.map((r) => (
+            <li
+              key={r.no}
+              className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5"
+            >
+              <div className="flex min-w-0 flex-1 items-start gap-3.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-brand-600">
+                  <FileText size={18} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-brand-700">{r.no}</p>
+                  <h3 className="text-[15px] font-semibold text-ink">
+                    {r.title}
+                  </h3>
+                  <p className="mt-0.5 text-sm text-slate-600">
+                    {r.description}
+                  </p>
+                  <p className="mt-2 flex flex-wrap items-center gap-x-2.5 text-xs text-slate-500">
+                    <span className="rounded border border-line bg-white px-1.5 py-0.5 font-semibold text-slate-600">
+                      {r.fileType}
+                    </span>
+                    <span>{r.pages} pages</span>
+                    <span>Updated {fmt(r.updated)}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 sm:shrink-0">
+                <a
+                  href={r.fileUrl}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 sm:flex-none"
+                >
+                  <Eye size={15} />
+                  View
+                </a>
+                <a
+                  href={r.fileUrl}
+                  download
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50 sm:flex-none"
+                >
+                  <Download size={15} />
+                  Download
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-8 flex items-start gap-2 text-sm text-slate-500">
+          <Info size={16} className="mt-0.5 shrink-0" />
+          {sampleNote}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Page ---------- */
+
+// Route: /lab-reports (the Navbar links here as /lab-reports?semester=N)
 export default function LabReports() {
-  // The Navbar links here as /lab-reports?semester=N; plain /lab-reports shows every semester.
   const [params] = useSearchParams();
   const semParam = params.get("semester");
-  const active = /^[1-8]$/.test(semParam ?? "") ? Number(semParam) : null;
-  const sems = active ? [active] : [1, 2, 3, 4, 5, 6, 7, 8];
-  const shown = subjects.filter((s) => sems.includes(s.semester));
-  const [openId, setOpenId] = useState(null);
+  const active = /^[1-8]$/.test(semParam ?? "") ? Number(semParam) : "all";
+  const [selected, setSelected] = useState(null);
+
+  const shown =
+    active === "all" ? subjects : subjects.filter((s) => s.semester === active);
 
   useEffect(() => {
-    document.title = "BCA Lab Reports – LearnDesk";
-  }, []);
+    document.title = selected
+      ? `${selected.name} Lab Reports – LearnDesk`
+      : "BCA Lab Reports – LearnDesk";
+  }, [selected]);
 
-  // Opening a semester from the Navbar expands its first subject right away.
+  // Changing semester (Navbar link) returns to the subject list.
   useEffect(() => {
-    setOpenId(active ? (shown[0]?.id ?? null) : null);
+    setSelected(null);
   }, [active]);
 
-  const facts = active
-    ? [
-        `${shown.length} Subjects`,
-        `${shown.reduce((n, s) => n + s.reports.length, 0)} Reports`,
-      ]
-    : ["8 Semesters", "40+ Subjects", "200+ Reports"];
+  // Jump to the top when a subject is opened or closed.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [selected]);
+
+  const home = { label: "Home", href: "/" };
 
   return (
     <>
       <Navbar />
       <main>
-        <PageHeader
-          title={active ? `Semester ${active} Lab Reports` : "BCA Lab Reports"}
-          text="Choose a subject to see its lab experiments, then view or download the report."
-          facts={facts}
-        />
+        {selected ? (
+          <>
+            <PageHeader
+              crumbs={[
+                home,
+                { label: "Lab Reports", href: "/lab-reports" },
+                { label: selected.name },
+              ]}
+              title={selected.name}
+            />
+            <SubjectDetail s={selected} onBack={() => setSelected(null)} />
+          </>
+        ) : (
+          <>
+            <PageHeader
+              crumbs={[home, { label: "Lab Reports" }]}
+              title="BCA Lab Reports"
+              text="Lab reports for every BCA semester. Open a subject to view or download its experiments."
+            />
+            <section className="bg-white py-6 lg:py-8">
+              <div className="wrap">
+                <p className="text-sm text-slate-500" aria-live="polite">
+                  {active === "all"
+                    ? `Showing all ${shown.length} subjects across 8 semesters`
+                    : `Showing ${shown.length} subjects in Semester ${active}`}
+                </p>
 
-        <section className="bg-white py-10 lg:py-14">
-          <div className="wrap space-y-10">
-            {sems.map((n) => {
-              const items = subjects.filter((s) => s.semester === n);
-              return (
-                <section key={n} aria-label={`Semester ${n}`}>
-                  {!active && (
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                      <h2 className="text-xl font-bold text-ink">
-                        Semester {n}
-                      </h2>
-                      <p className="text-sm text-slate-500">
-                        {items.length} subjects
-                      </p>
-                    </div>
-                  )}
+                <ul className="mt-4 grid gap-4 md:grid-cols-2">
+                  {shown.map((s) => (
+                    <SubjectCard key={s.id} s={s} onOpen={setSelected} />
+                  ))}
+                </ul>
 
-                  <ul className={`space-y-3 ${active ? "" : "mt-4"}`}>
-                    {items.map((s) => {
-                      const isOpen = openId === s.id;
-                      return (
-                        <li
-                          key={s.id}
-                          className={`overflow-hidden rounded-xl border bg-white shadow-soft transition-colors ${isOpen ? "border-brand-300" : "border-line"}`}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => setOpenId(isOpen ? null : s.id)}
-                            aria-expanded={isOpen}
-                            className={`group flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors hover:bg-brand-50/60 sm:px-5 ${isOpen ? "bg-brand-50/60" : ""}`}
-                          >
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-                              <FlaskConical size={18} />
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-base font-semibold text-ink group-hover:text-brand-700">
-                                {s.name}
-                              </span>
-                              <span className="mt-0.5 block text-sm text-slate-500">
-                                {s.reports.length} lab reports
-                              </span>
-                            </span>
-                            <span
-                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all ${isOpen ? "rotate-90 border-brand-300 bg-white text-brand-700" : "border-line text-slate-400 group-hover:border-brand-300 group-hover:text-brand-700"}`}
-                            >
-                              <ChevronRight size={16} />
-                            </span>
-                          </button>
-
-                          {isOpen && (
-                            <ul className="divide-y divide-line border-t border-line">
-                              {s.reports.map((r) => (
-                                <ReportRow key={r.no} r={r} />
-                              ))}
-                            </ul>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </section>
-              );
-            })}
-
-            <p className="flex items-start gap-2 text-sm text-slate-500">
-              <Info size={16} className="mt-0.5 shrink-0" />
-              {sampleNote}
-            </p>
-          </div>
-        </section>
+                <p className="mt-8 flex items-start gap-2 text-sm text-slate-500">
+                  <Info size={16} className="mt-0.5 shrink-0" />
+                  {sampleNote}
+                </p>
+              </div>
+            </section>
+          </>
+        )}
       </main>
       <Footer />
     </>
