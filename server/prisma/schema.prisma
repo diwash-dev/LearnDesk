@@ -1,0 +1,178 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  password     String
+  role         Role     @default(STUDENT)
+  createdAt    DateTime @default(now())
+
+  materials    Material[]
+  projects     Project[]
+  labReports   LabReport[]
+  pastQuestions PastQuestion[]
+  syllabuses   Syllabus[]
+  results      Result[]
+  notices      Notice[]
+  events       Event[]
+}
+
+model Semester {
+  id         Int      @id @default(autoincrement())
+  number     Int      @unique
+  name       String
+  createdAt  DateTime @default(now())
+
+  subjects   Subject[]
+  materials  Material[]
+  projects   Project[]
+  labReports LabReport[]
+  questions  PastQuestion[]
+  syllabuses Syllabus[]
+  results    Result[]
+}
+
+model Subject {
+  id         Int      @id @default(autoincrement())
+  name       String
+  code       String?
+  semesterId Int
+
+  semester   Semester     @relation(fields: [semesterId], references: [id])
+  materials  Material[]
+  projects   Project[]
+  labReports LabReport[]
+  questions  PastQuestion[]
+}
+
+model Material {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  semesterId  Int
+  subjectId   Int
+  uploadedBy  Int
+  createdAt   DateTime @default(now())
+
+  semester Semester @relation(fields: [semesterId], references: [id])
+  subject  Subject  @relation(fields: [subjectId], references: [id])
+  user     User      @relation(fields: [uploadedBy], references: [id])
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  semesterId  Int
+  subjectId   Int?
+  uploadedBy  Int
+  createdAt   DateTime @default(now())
+
+  semester Semester @relation(fields: [semesterId], references: [id])
+  subject  Subject? @relation(fields: [subjectId], references: [id])
+  user     User      @relation(fields: [uploadedBy], references: [id])
+}
+
+model LabReport {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  semesterId  Int
+  subjectId   Int
+  uploadedBy  Int
+  createdAt   DateTime @default(now())
+
+  semester Semester @relation(fields: [semesterId], references: [id])
+  subject  Subject  @relation(fields: [subjectId], references: [id])
+  user     User     @relation(fields: [uploadedBy], references: [id])
+}
+
+model PastQuestion {
+  id          Int      @id @default(autoincrement())
+  title       String
+  year        Int
+  fileUrl     String
+  fileType    String
+  semesterId  Int
+  subjectId   Int
+  uploadedBy  Int
+  createdAt   DateTime @default(now())
+
+  semester Semester @relation(fields: [semesterId], references: [id])
+  subject  Subject  @relation(fields: [subjectId], references: [id])
+  user     User     @relation(fields: [uploadedBy], references: [id])
+}
+
+model Syllabus {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  semesterId  Int
+  uploadedBy  Int
+  createdAt   DateTime @default(now())
+
+  semester Semester @relation(fields: [semesterId], references: [id])
+  user     User     @relation(fields: [uploadedBy], references: [id])
+}
+
+model Result {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  semesterId  Int
+  uploadedBy  Int
+  createdAt   DateTime @default(now())
+
+  semester Semester @relation(fields: [semesterId], references: [id])
+  user     User     @relation(fields: [uploadedBy], references: [id])
+}
+
+model Notice {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+  uploadedBy Int
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [uploadedBy], references: [id])
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  date        DateTime
+  imageUrl    String?
+  uploadedBy  Int
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [uploadedBy], references: [id])
+}
