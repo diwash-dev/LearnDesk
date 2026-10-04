@@ -15,6 +15,8 @@ import {
 import { categoryIcons } from "./ResourceCard.jsx";
 
 const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
+const semestersByMenu = { Projects: [4, 6, 8] };
+const getSemesters = (name) => semestersByMenu[name] ?? semesters;
 
 // Each of these opens a Semester 1-8 menu. Only Syllabus and Notes have real routes so far;
 // the others stay "#" placeholders until their pages exist.
@@ -26,11 +28,12 @@ const resourceMenus = [
   "Projects",
 ];
 
-const routes = { Syllabus: "/syllabus", Notes: "/notes" };
+const routes = { Syllabus: "/syllabus", Notes: "/notes", "Question Papers": "/question-papers" };
 const allHref = (name) => routes[name] ?? "#";
 const semHref = (name, n) => {
   if (name === "Syllabus") return `/syllabus/${n}`;
   if (name === "Notes") return `/notes?semester=${n}`;
+  if (name === "Question Papers") return `/question-papers/${n}`;
   return "#";
 };
 
@@ -178,7 +181,7 @@ export default function Navbar() {
                         </p>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
-                        {semesters.map((n) => (
+                        {getSemesters(name).map((n) => (
                           <A
                             key={n}
                             href={semHref(name, n)}
@@ -363,7 +366,7 @@ export default function Navbar() {
                               {routes[name] ? "All Semesters" : `All ${name}`}
                               <ArrowRight size={14} />
                             </A>
-                            {semesters.map((n) => (
+                            {getSemesters(name).map((n) => (
                               <A
                                 key={n}
                                 href={semHref(name, n)}

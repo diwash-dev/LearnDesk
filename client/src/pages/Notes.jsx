@@ -8,8 +8,6 @@ import {
   FileArchive,
   FileText,
   Presentation,
-  Search,
-  X,
 } from "lucide-react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
@@ -18,7 +16,8 @@ import Footer from "../components/Footer.jsx";
    SAMPLE / DUMMY records for UI development only.
    Later: replace `files` with a fetch to the Express API (GET /api/notes).
    Every file keeps the same shape the backend can return:
-   { id, semester, subject, title, description, unit, type, pages, size, fileUrl, date }
+   { id, semester, subject, title, description, unit, type, resourceType, pages, size, fileUrl, date }
+   resourceType: notes | important | other
    fileUrl will point to the file stored on Cloudinary. */
 
 // [subject, short name, "unit 1|unit 2|unit 3", extra file kind]
@@ -286,18 +285,21 @@ const extras = {
   a: {
     suffix: "Assignment",
     type: "DOCX",
+    resourceType: "other",
     label: "an assignment",
     text: "Practice assignment with questions from each unit.",
   },
   s: {
     suffix: "Lecture Slides",
     type: "PPTX",
+    resourceType: "other",
     label: "lecture slides",
     text: "Lecture slides covering the whole syllabus for quick revision.",
   },
   c: {
     suffix: "Lab Programs",
     type: "ZIP",
+    resourceType: "other",
     label: "lab programs",
     text: "Complete set of lab programs with sample output.",
   },
@@ -326,6 +328,7 @@ Object.entries(raw).forEach(([semKey, list]) => {
         description: `Lecture notes on ${t.toLowerCase()} with solved examples and practice questions.`,
         unit: i + 1,
         type: "PDF",
+        resourceType: "notes",
       })),
       {
         title: `${short} Important Questions`,
@@ -333,12 +336,14 @@ Object.entries(raw).forEach(([semKey, list]) => {
           "Frequently asked exam questions with model answers from past papers.",
         unit: null,
         type: "PDF",
+        resourceType: "important",
       },
       {
         title: `${short} ${extra.suffix}`,
         description: extra.text,
         unit: null,
         type: extra.type,
+        resourceType: extra.resourceType,
       },
     ];
 
@@ -390,6 +395,14 @@ const fmtDate = (iso) =>
     timeZone: "UTC",
   });
 
+// Resource-type filter shown above each subject's file list
+const resourceTypes = [
+  { value: "all", label: "All" },
+  { value: "notes", label: "Notes" },
+  { value: "important", label: "Important Notes" },
+  { value: "other", label: "Other" },
+];
+
 const typeIcons = {
   PDF: FileText,
   DOCX: FileText,
@@ -403,7 +416,6 @@ export default function Notes() {
   // State lives in the URL (?semester=6&subject=database-management-system),
   // so Navbar links, refresh and sharing all work on this single page.
   const [params, setParams] = useSearchParams();
-  const [q, setQ] = useState("");
 
   const semParam = Number(params.get("semester"));
   const sem =
@@ -413,18 +425,6 @@ export default function Notes() {
     ? (subjects.find((s) => s.slug === params.get("subject")) ?? subjects[0])
     : null;
 
-  const query = q.trim().toLowerCase();
-  const results = query
-    ? files.filter(
-        (f) =>
-          (sem === 0 || f.semester === sem) &&
-          `${f.title} ${f.subject} ${f.description} ${f.type}`
-            .toLowerCase()
-            .includes(query),
-      )
-    : [];
-
-  const chooseSemester = (n) => setParams(n ? { semester: n } : {});
   const chooseSubject = (s) => {
     setParams({ semester: s.semester, subject: s.slug });
     // On small screens the file list sits below the subjects, so bring it into view
@@ -468,102 +468,13 @@ export default function Notes() {
               Unit-wise notes, important questions, assignments and lab material
               for every BCA subject, organized by semester.
             </p>
-
-            <label className="relative mt-7 block max-w-xl">
-              <span className="sr-only">Search notes and files</span>
-              <Search
-                size={17}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type="search"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search notes, subjects or file types"
-                className="w-full rounded-lg border border-line bg-white py-3 pl-10 pr-10 text-[15px] text-ink shadow-soft outline-none transition-colors placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-              />
-              {q && (
-                <button
-                  type="button"
-                  onClick={() => setQ("")}
-                  aria-label="Clear search"
-                  className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-brand-50 hover:text-brand-700"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </label>
-          </div>
-        </section>
-
-        {/* Semester filter */}
-        <section className="border-b border-line bg-white">
-          <div className="wrap py-6">
-            <p className="text-sm font-semibold text-ink">Select semester</p>
-            <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
-              <button
-                type="button"
-                onClick={() => chooseSemester(0)}
-                aria-pressed={sem === 0}
-                className={`flex flex-col justify-between rounded-lg border px-3 py-2.5 text-left transition ${
-                  sem === 0
-                    ? "border-brand-700 bg-brand-700 text-white shadow-lift"
-                    : "border-line bg-white hover:border-brand-300 hover:bg-brand-50"
-                }`}
-              >
-                <span className="text-lg font-extrabold leading-6">All</span>
-                <span
-                  className={`text-xs ${sem === 0 ? "text-brand-200" : "text-slate-500"}`}
-                >
-                  {files.length} files
-                </span>
-              </button>
-              {semesterNumbers.map((n) => {
-                const active = n === sem;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => chooseSemester(n)}
-                    aria-pressed={active}
-                    aria-label={`${ordinal[n]} Semester`}
-                    className={`flex flex-col justify-between rounded-lg border px-3 py-2.5 text-left transition ${
-                      active
-                        ? "border-brand-700 bg-brand-700 text-white shadow-lift"
-                        : "border-line bg-white hover:border-brand-300 hover:bg-brand-50"
-                    }`}
-                  >
-                    <span className="text-lg font-extrabold leading-6">
-                      <span
-                        className={`text-[11px] font-medium ${active ? "text-brand-200" : "text-slate-500"}`}
-                      >
-                        Sem{" "}
-                      </span>
-                      {n}
-                    </span>
-                    <span
-                      className={`text-xs ${active ? "text-brand-200" : "text-slate-500"}`}
-                    >
-                      {fileCount(n)} files
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
           </div>
         </section>
 
         {/* Content */}
         <section className="bg-white py-12 lg:py-16">
           <div className="wrap">
-            {query ? (
-              <SearchResults
-                q={q.trim()}
-                sem={sem}
-                results={results}
-                onClear={() => setQ("")}
-              />
-            ) : sem === 0 ? (
+            {sem === 0 ? (
               <div className="space-y-12">
                 {semesterNumbers.map((n) => (
                   <div key={n}>
@@ -587,7 +498,10 @@ export default function Notes() {
                       onSelect={chooseSubject}
                     />
                   </div>
-                  <SubjectFiles subject={subject} />
+                  <SubjectFiles
+                    key={`${subject.semester}-${subject.slug}`}
+                    subject={subject}
+                  />
                 </div>
               </>
             )}
@@ -673,6 +587,12 @@ function SubjectList({ subjects, active, onSelect, twoColumns = false }) {
 }
 
 function SubjectFiles({ subject }) {
+  const [type, setType] = useState("all");
+  const shown =
+    type === "all"
+      ? subject.files
+      : subject.files.filter((f) => f.resourceType === type);
+
   return (
     <div
       id="files"
@@ -690,47 +610,49 @@ function SubjectFiles({ subject }) {
           {subject.files.length} files · Last updated {fmtDate(subject.latest)}
         </p>
       </div>
-      <div className="divide-y divide-line">
-        {subject.files.map((f) => (
-          <FileRow key={f.id} f={f} />
-        ))}
+      <div
+        role="group"
+        aria-label="Filter by resource type"
+        className="flex gap-2 overflow-x-auto border-b border-line px-4 py-3 sm:px-5"
+      >
+        {resourceTypes.map((r) => {
+          const count =
+            r.value === "all"
+              ? subject.files.length
+              : subject.files.filter((f) => f.resourceType === r.value).length;
+          const active = r.value === type;
+          return (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => setType(r.value)}
+              aria-pressed={active}
+              className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                active
+                  ? "border-brand-700 bg-brand-700 text-white shadow-soft"
+                  : "border-line bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+              }`}
+            >
+              {r.label}
+              <span
+                className={`text-xs font-medium ${active ? "text-brand-200" : "text-slate-400"}`}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
-    </div>
-  );
-}
-
-function SearchResults({ q, sem, results, onClear }) {
-  return (
-    <div>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
-        <h2 className="text-2xl font-bold text-ink">
-          {results.length} {results.length === 1 ? "result" : "results"} for “
-          {q}”
-        </h2>
-        <p className="text-sm text-slate-500">
-          {sem ? `${ordinal[sem]} Semester` : "All semesters"}
-        </p>
-      </div>
-      {results.length ? (
-        <div className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-white shadow-soft">
-          {results.map((f) => (
-            <FileRow key={f.id} f={f} showSubject />
+      {shown.length ? (
+        <div className="divide-y divide-line">
+          {shown.map((f) => (
+            <FileRow key={f.id} f={f} />
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-line bg-surface px-6 py-12 text-center">
-          <p className="font-semibold text-ink">No files match your search</p>
-          <p className="mt-1 text-sm text-slate-500">
-            Try a subject name, a unit topic or a file type such as PDF.
-          </p>
-          <button
-            type="button"
-            onClick={onClear}
-            className="mt-5 inline-flex items-center justify-center rounded-lg border border-line bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50"
-          >
-            Clear search
-          </button>
-        </div>
+        <p className="px-5 py-10 text-center text-sm text-slate-500">
+          No files of this type for this subject yet.
+        </p>
       )}
     </div>
   );

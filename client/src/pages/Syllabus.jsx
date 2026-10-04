@@ -337,7 +337,7 @@ const raw = {
   ],
 };
 
-const subjects = Object.entries(raw).flatMap(([sem, list]) =>
+export const subjects = Object.entries(raw).flatMap(([sem, list]) =>
   list.map(([subject, subjectCode, creditHours, description, units]) => ({
     semester: Number(sem),
     subject,
@@ -351,9 +351,7 @@ const subjects = Object.entries(raw).flatMap(([sem, list]) =>
 );
 
 const ordinal = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
-const tabs = [{ value: 0, label: "All" }].concat(
-  ordinal.slice(1).map((o, i) => ({ value: i + 1, label: `${o} Semester` })),
-);
+export const semesterNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const btnPrimary =
   "inline-flex items-center justify-center gap-2 rounded-lg bg-brand-700 px-5 py-3 text-[15px] font-semibold text-white shadow-soft transition-colors hover:bg-brand-800";
@@ -456,34 +454,6 @@ function List({ sem }) {
           </ul>
         </div>
       </section>
-
-      {/* Semester selector: real links, so every semester has its own URL */}
-      <div className="sticky top-16 z-40 border-b border-line bg-white lg:top-[4.5rem]">
-        <div className="wrap">
-          <nav
-            aria-label="Select semester"
-            className="-mx-1 flex gap-1 overflow-x-auto px-1 py-3"
-          >
-            {tabs.map((t) => {
-              const active = t.value === sem;
-              return (
-                <Link
-                  key={t.value}
-                  to={t.value === 0 ? "/syllabus" : `/syllabus/${t.value}`}
-                  aria-current={active ? "page" : undefined}
-                  className={`shrink-0 whitespace-nowrap rounded-md px-3.5 py-2 text-sm font-semibold transition-colors ${
-                    active
-                      ? "bg-brand-700 text-white shadow-soft"
-                      : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
-                  }`}
-                >
-                  {t.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
 
       <section className="bg-white py-12 lg:py-16">
         <div className="wrap space-y-12">
