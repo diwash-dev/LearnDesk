@@ -4,6 +4,7 @@ import Syllabus from "./pages/Syllabus.jsx";
 import Notes from "./pages/Notes.jsx";
 import QuestionPapers from "./pages/QuestionPapers.jsx";
 import LabReports from "./pages/Labreports.jsx";
+import Projects from "./pages/Projects.jsx";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           element={<QuestionPapers />}
         />
         <Route path="/lab-reports" element={<LabReports />} />
+        <Route path="/projects" element={<Projects />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

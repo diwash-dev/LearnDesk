@@ -33,13 +33,15 @@ const routes = {
   Notes: "/notes",
   "Question Papers": "/question-papers",
   "Lab Reports": "/lab-reports",
+  Projects: "/projects",
 };
 const allHref = (name) => routes[name] ?? "#";
 const semHref = (name, n) => {
   if (name === "Syllabus") return `/syllabus/${n}`;
   if (name === "Notes") return `/notes?semester=${n}`;
   if (name === "Question Papers") return `/question-papers/${n}`;
-if (name === "Lab Reports") return `/lab-reports?semester=${n}`;
+  if (name === "Lab Reports") return `/lab-reports?semester=${n}`;
+  if (name === "Projects") return `/projects?semester=${n}`;
 
   return "#";
 };
