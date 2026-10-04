@@ -67,7 +67,7 @@ function NotFound({ message, href, label }) {
    (GET /api/question-papers); `subject` is the subject slug. fileUrl will point to the
    PDF stored on Cloudinary. */
 
-const papers = subjects.flatMap((s, i) => {
+export const papers = subjects.flatMap((s, i) => {
   const partialYears = i % 2 ? [2025, 2023] : [2024, 2022];
   const rows = [
     ...[2025, 2024, 2023, 2022].map((year) => [year, "Regular"]),

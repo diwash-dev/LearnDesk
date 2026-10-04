@@ -34,7 +34,7 @@ export default function AdminSidebar({ open, onClose }) {
       aria-label="Admin"
       className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-line bg-white transition-transform duration-200 lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
     >
-      <div className="flex h-16 items-center justify-between border-b border-line px-4 lg:h-[4.5rem]">
+      <div className="flex h-16 items-center justify-between border-b border-line px-4 lg:h-18">
         <Logo />
         <button
           type="button"
@@ -67,9 +67,17 @@ export default function AdminSidebar({ open, onClose }) {
             <ul className="space-y-0.5">
               {items.map(({ label, icon: Icon }) => (
                 <li key={label}>
-                  {label === "Notes" ? (
+                  {label === "Notes" ||
+                  label === "Syllabus" ||
+                  label === "Question Papers" ? (
                     <NavLink
-                      to="/admin/notes"
+                      to={
+                        label === "Notes"
+                          ? "/admin/notes"
+                          : label === "Syllabus"
+                            ? "/admin/syllabus"
+                            : "/admin/question-papers"
+                      }
                       onClick={onClose}
                       className={({ isActive }) =>
                         `${item} ${isActive ? "bg-brand-50 text-brand-700" : idle}`

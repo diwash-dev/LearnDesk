@@ -9,6 +9,10 @@ import Dashboard from "./components/admin/Dashboard.jsx";
 import AllNotes from "./components/admin/Allnotes.jsx";
 import NoteForm from "./components/admin/Noteform.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
+import AllSyllabus from "./components/admin/Allsyllabus.jsx";
+import AddSyllabus from "./components/admin/Addsyllabus.jsx";
+import AddQuestionPaper from "./components/admin/Addquestionpaper.jsx";
+import AllQuestionPapers from "./components/admin/Allquestionpapers.jsx";
 
 function App() {
   return (
@@ -27,6 +31,19 @@ function App() {
         />
         <Route path="/lab-reports" element={<LabReports />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/admin/syllabus" element={<AllSyllabus />} />
+        <Route path="/admin/syllabus/new" element={<AddSyllabus />} />
+        <Route path="/admin/syllabus/:id/edit" element={<AddSyllabus />} />
+
+        <Route path="/admin/question-papers" element={<AllQuestionPapers />} />
+        <Route
+          path="/admin/question-papers/new"
+          element={<AddQuestionPaper />}
+        />
+        <Route
+          path="/admin/question-papers/:id/edit"
+          element={<AddQuestionPaper />}
+        />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
