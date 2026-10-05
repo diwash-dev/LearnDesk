@@ -18,15 +18,23 @@ import { semesterNumbers, syllabusCatalog } from "./Allsyllabus.jsx";
 
 /* Question paper store (in memory, starts empty, resets on reload).
    Record shape:
-   { id, title, semester, subject, year, examType, description, fileName, size, fileUrl, status, date }
+  { id, title, semester, subject, year, paperType, description, fileName, size, fileUrl, status, date }
    Replace these functions with API calls later (GET/POST/PUT/DELETE /api/question-papers). */
-export const examTypes = ["Regular", "Partial", "Model"];
+export const paperTypes = [
+  "University",
+  "College",
+  "Mid-Term",
+  "Internal",
+  "Model",
+  "Practical",
+  "Other",
+];
 
 const today = () => new Date().toISOString().slice(0, 10);
 const pagePaperItems = pagePapers.map((paper, index) => ({
   ...paper,
   id: index + 1,
-  title: `${paper.year} ${paper.examType} Question Paper`,
+  title: `${paper.year} ${paper.paperType} Question Paper`,
   subject:
     syllabusCatalog[paper.semester]?.find((s) => s.slug === paper.subject)
       ?.subject ?? paper.subject,
@@ -163,8 +171,7 @@ export default function AllQuestionPapers() {
             <table className="w-full border-t border-line text-left text-sm lg:min-w-[62rem]">
               <thead className="hidden bg-surface text-xs font-semibold text-slate-500 lg:table-header-group">
                 <tr className="border-b border-line">
-                  <th className="py-2.5 pl-5 pr-4 font-semibold">Title</th>
-                  {["Subject", "Semester", "Year", "Exam type", "Status"].map(
+                  {["Subject", "Semester", "Year", "Paper Type", "Status"].map(
                     (h) => (
                       <th key={h} className="px-4 py-2.5 font-semibold">
                         {h}
@@ -183,7 +190,7 @@ export default function AllQuestionPapers() {
                     ? "bg-brand-50 text-brand-700"
                     : "border border-line bg-white text-slate-600";
                   const typeBadge =
-                    p.examType === "Regular"
+                    p.paperType === "University"
                       ? "bg-brand-50 text-brand-700"
                       : "border border-line bg-white text-slate-600";
                   return (
@@ -198,16 +205,10 @@ export default function AllQuestionPapers() {
                           </span>
                           <div className="min-w-0">
                             <p className="font-semibold leading-snug text-ink">
-                              {p.title}
+                              {p.subject}
                             </p>
-                            {p.description && (
-                              <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">
-                                {p.description}
-                              </p>
-                            )}
                             <p className="mt-0.5 text-xs text-slate-500 lg:hidden">
-                              Sem {p.semester} · {p.subject} · {p.year} ·{" "}
-                              {p.examType}
+                              Sem {p.semester} · {p.year} · {p.paperType}
                             </p>
                             <span
                               className={`mt-1.5 inline-block lg:hidden ${pill} ${badge}`}
@@ -217,12 +218,11 @@ export default function AllQuestionPapers() {
                           </div>
                         </div>
                       </td>
-                      <td className={cell}>{p.subject}</td>
                       <td className={cell}>{ordinal[p.semester]}</td>
                       <td className={cell}>{p.year}</td>
                       <td className={cell}>
                         <span className={`${pill} ${typeBadge}`}>
-                          {p.examType}
+                          {p.paperType}
                         </span>
                       </td>
                       <td className={cell}>

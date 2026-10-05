@@ -63,7 +63,10 @@ export default function NoteForm() {
         }
       })
       .catch((error) =>
-        showError(error.message || "Failed to load note", "Could not load note"),
+        showError(
+          error.message || "Failed to load note",
+          "Could not load note",
+        ),
       )
       .finally(() => setLoading(false));
   }, [id, showError]);
@@ -210,7 +213,9 @@ export default function NoteForm() {
               <option value="">Select semester</option>
               {catalog.map((semester) => (
                 <option key={semester.id} value={semester.id}>
-                  {ordinal[semester.number] ?? semester.name}
+                  {ordinal[semester.number]
+                    ? `${ordinal[semester.number]} Semester`
+                    : semester.name}
                 </option>
               ))}
             </select>

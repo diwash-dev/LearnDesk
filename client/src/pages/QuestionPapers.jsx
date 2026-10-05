@@ -62,23 +62,32 @@ function NotFound({ message, href, label }) {
 }
 
 /* ---------- Sample question papers ----------
-   Subjects come from the sample syllabus data. Each subject gets four Regular papers
-   (2022-2025) and two Partial papers. Replace `papers` with a fetch to the Express API later
-   (GET /api/question-papers); `subject` is the subject slug. fileUrl will point to the
-   PDF stored on Cloudinary. */
+   Subjects come from the sample syllabus data. Replace `papers` with a fetch to the
+   Express API later (GET /api/question-papers); `subject` is the subject slug.
+   fileUrl will point to the PDF stored on Cloudinary. */
 
 export const papers = subjects.flatMap((s, i) => {
-  const partialYears = i % 2 ? [2025, 2023] : [2024, 2022];
+  const paperTypes = [
+    "University",
+    "College",
+    "Mid-Term",
+    "Internal",
+    "Model",
+    "Practical",
+    "Other",
+  ];
   const rows = [
-    ...[2025, 2024, 2023, 2022].map((year) => [year, "Regular"]),
-    ...partialYears.map((year) => [year, "Partial"]),
-  ].sort((a, b) => b[0] - a[0] || (a[1] === "Regular" ? -1 : 1));
+    ...[2025, 2024, 2023, 2022].map((year, j) => [
+      year,
+      paperTypes[(i + j) % paperTypes.length],
+    ]),
+  ];
 
-  return rows.map(([year, examType], j) => ({
+  return rows.map(([year, paperType], j) => ({
     semester: s.semester,
     subject: s.slug,
     year,
-    examType,
+    paperType,
     pages: 3 + ((i + j * 2) % 6),
     size: `${(0.4 + ((i * 7 + j * 5) % 17) / 10).toFixed(1)} MB`,
     fileUrl: "#",
@@ -284,20 +293,20 @@ function PaperList({ subject: s, compact = false }) {
           <ul className="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-white shadow-soft">
             {list.map((p) => (
               <li
-                key={`${p.year}-${p.examType}`}
+                key={`${p.year}-${p.paperType}`}
                 className="grid gap-3 px-5 py-4 sm:grid-cols-[4.5rem_6rem_minmax(0,1fr)_auto] sm:items-center sm:gap-5"
               >
-                {/* sm:contents lets year and exam type become grid cells on wider screens */}
+                {/* sm:contents lets year and paper type become grid cells on wider screens */}
                 <div className="flex items-center gap-3 sm:contents">
                   <p className="text-lg font-bold text-ink">{p.year}</p>
                   <span
                     className={`w-fit rounded px-2 py-0.5 text-xs font-semibold ${
-                      p.examType === "Regular"
+                      p.paperType === "University"
                         ? "bg-brand-50 text-brand-700"
                         : "border border-line bg-white text-slate-600"
                     }`}
                   >
-                    {p.examType}
+                    {p.paperType}
                   </span>
                 </div>
 

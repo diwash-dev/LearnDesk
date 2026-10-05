@@ -5,7 +5,7 @@ import AdminLayout from "./AdminLayout.jsx";
 import { ordinal } from "../../pages/Notes.jsx";
 import {
   addPaper,
-  examTypes,
+  paperTypes,
   getPaper,
   semesterNumbers,
   syllabusCatalog,
@@ -31,12 +31,10 @@ export default function AddQuestionPaper() {
   const formRef = useRef(null);
   const existing = id ? getPaper(id) : null;
   const [form, setForm] = useState(() => ({
-    title: existing?.title ?? "",
     semester: existing?.semester ?? "",
     subject: existing?.subject ?? "",
     year: existing?.year ?? "",
-    examType: existing?.examType ?? "Regular",
-    description: existing?.description ?? "",
+    paperType: existing?.paperType ?? "University",
   }));
   const [file, setFile] = useState(null);
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -54,12 +52,11 @@ export default function AddQuestionPaper() {
   const save = (status) => {
     if (status === "draft" && !formRef.current.reportValidity()) return;
     const data = {
-      title: form.title.trim(),
+      title: existing?.title ?? `${form.year} ${form.paperType} Question Paper`,
       semester: form.semester,
       subject: form.subject,
       year: Number(form.year),
-      examType: form.examType,
-      description: form.description.trim(),
+      paperType: form.paperType,
       fileName: file ? file.name : (existing?.fileName ?? ""),
       size: file ? fmtSize(file.size) : (existing?.size ?? "—"),
       fileUrl: existing?.fileUrl ?? "#", // dummy until uploads are connected
@@ -116,20 +113,6 @@ export default function AddQuestionPaper() {
         className="max-w-3xl rounded-xl border border-line bg-white p-5 shadow-soft sm:p-6"
       >
         <div className="grid gap-5 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label htmlFor="title" className={label}>
-              Title
-            </label>
-            <input
-              id="title"
-              required
-              value={form.title}
-              onChange={set("title")}
-              placeholder="e.g. 2024 Regular Question Paper"
-              className={`${input} h-10`}
-            />
-          </div>
-
           <div>
             <label htmlFor="semester" className={label}>
               Semester
@@ -190,40 +173,23 @@ export default function AddQuestionPaper() {
             />
           </div>
 
-          <fieldset>
-            <legend className={label}>Exam type</legend>
-            <div className="flex flex-wrap gap-2">
-              {examTypes.map((t) => (
-                <label key={t} className="cursor-pointer">
-                  <input
-                    type="radio"
-                    name="examType"
-                    value={t}
-                    checked={form.examType === t}
-                    onChange={set("examType")}
-                    className="peer sr-only"
-                  />
-                  <span className="block rounded-lg border border-line px-3.5 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-brand-300 hover:bg-brand-50 peer-checked:border-brand-700 peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-300">
-                    {t}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <div className="sm:col-span-2">
-            <label htmlFor="description" className={label}>
-              Description{" "}
-              <span className="font-normal text-slate-500">(optional)</span>
+          <div>
+            <label htmlFor="paperType" className={label}>
+              Paper Type
             </label>
-            <textarea
-              id="description"
-              rows={3}
-              value={form.description}
-              onChange={set("description")}
-              placeholder="A short note about this question paper"
-              className={`${input} py-2.5`}
-            />
+            <select
+              id="paperType"
+              required
+              value={form.paperType}
+              onChange={set("paperType")}
+              className={`${input} h-10`}
+            >
+              {paperTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="sm:col-span-2">
