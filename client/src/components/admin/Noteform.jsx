@@ -44,28 +44,39 @@ export default function NoteForm() {
 
   const subjects = catalog[form.semester] ?? [];
 
-  const save = (status) => {
-    if (status === "draft" && !formRef.current.reportValidity()) return;
-    // Same field names as the public Notes data, plus `status`.
-    const data = {
-      semester: form.semester,
-      subject: form.subject,
-      title: form.title.trim(),
-      description: form.description.trim(),
-      unit: form.unit ? Number(form.unit) : null,
-      type: file ? "PDF" : (existing?.type ?? "PDF"),
-      resourceType: form.resourceType,
-      pages: existing?.pages ?? null,
-      size: file ? fmtSize(file.size) : (existing?.size ?? "—"),
-      fileUrl: existing?.fileUrl ?? "#", // dummy until uploads are connected
-      status,
-    };
-    existing ? updateNote(id, data) : addNote(data);
-    navigate("/admin/notes", {
-      state: {
-        message: status === "published" ? "Note published." : "Draft saved.",
-      },
-    });
+  const save = async (status) => {
+    if (!formRef.current.reportValidity()) return;
+
+    try {
+      const data = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        semesterId: Number(form.semester),
+        subjectId: Number(form.subject),
+        fileUrl: existing?.fileUrl ?? "#",
+        fileType: "PDF",
+      };
+
+      if (existing) {
+        await updateNote(id, data);
+
+        navigate("/admin/notes", {
+          state: { message: "Note updated successfully." },
+        });
+      } else {
+        await addNote(data);
+
+        navigate("/admin/notes", {
+          state: {
+            message:
+              status === "published" ? "Note published." : "Draft saved.",
+          },
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Failed to save note");
+    }
   };
 
   if (id && !existing) {

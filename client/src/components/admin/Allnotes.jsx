@@ -32,7 +32,14 @@ const iconBtn =
 const cell = "hidden px-4 py-3.5 text-slate-600 lg:table-cell";
 
 export default function AllNotes() {
-  const [notes, setNotes] = useState(getNotes);
+  const [notes, setNotes] = useState([]);
+  useEffect(() => {
+    getNotes()
+      .then(setNotes)
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
   const [filter, setFilter] = useState({ semester: "", subject: "", type: "" });
   const [page, setPage] = useState(1);
   const message = useLocation().state?.message;
@@ -65,11 +72,17 @@ export default function AllNotes() {
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
   const remove = (n) => {
-    if (!window.confirm(`Delete "${n.title}"? This cannot be undone.`)) return;
-    deleteNote(n.id);
-    setNotes(getNotes());
-  };
+ const remove = async (n) => {
+  if (!window.confirm(`Delete "${n.title}"? This cannot be undone.`)) return;
 
+  try {
+    await deleteNote(n.id);
+    setNotes((current) => current.filter((item) => item.id !== n.id));
+  } catch (error) {
+    console.error(error);
+  }
+};
+}
   return (
     <AdminLayout
       title="All Notes"

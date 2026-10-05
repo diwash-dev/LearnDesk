@@ -3,3 +3,7 @@ node_modules
 .env
 
 /generated/prisma
+
+# Uploaded files are runtime data.
+/uploads/*
+!/uploads/.gitkeep

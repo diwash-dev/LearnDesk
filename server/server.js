@@ -5,6 +5,8 @@ import pg from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client.ts";
 import authRoutes from "./routes/auth.rout.js";
+import noteRoutes from "./routes/note.rout.js";
+import catalogRoutes from "./routes/catalog.rout.js";
 
 const { Pool } = pg;
 
@@ -20,6 +22,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/notes", noteRoutes);
+app.use("/api/catalog", catalogRoutes);
 
 const PORT = 5000;
 

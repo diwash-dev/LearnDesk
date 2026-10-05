@@ -25,7 +25,7 @@ model User {
   role         Role     @default(STUDENT)
   createdAt    DateTime @default(now())
 
-  materials    Material[]
+ notes Note[]
   projects     Project[]
   labReports   LabReport[]
   pastQuestions PastQuestion[]
@@ -42,7 +42,7 @@ model Semester {
   createdAt  DateTime @default(now())
 
   subjects   Subject[]
-  materials  Material[]
+  notes Note[]
   projects   Project[]
   labReports LabReport[]
   questions  PastQuestion[]
@@ -57,13 +57,13 @@ model Subject {
   semesterId Int
 
   semester   Semester     @relation(fields: [semesterId], references: [id])
-  materials  Material[]
+ notes Note[]
   projects   Project[]
   labReports LabReport[]
   questions  PastQuestion[]
 }
 
-model Material {
+model Note {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
