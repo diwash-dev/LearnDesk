@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -10,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
+import AdminToast from "./AdminToast.jsx";
 import { categoryIcons } from "../ResourceCard.jsx";
 import { fmtDate, ordinal } from "../../pages/Notes.jsx";
 import { DOCS, projects as publicProjects } from "../../pages/Projects.jsx";
@@ -101,12 +101,7 @@ export default function AllProjects() {
       title="All Projects"
       text="Manage projects and their documents"
     >
-      {message && (
-        <p className="mb-4 flex items-center gap-2 rounded-lg border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-medium text-brand-700">
-          <CheckCircle2 size={16} />
-          {message}
-        </p>
-      )}
+      <AdminToast message={message} title="Project saved" />
 
       <section className="overflow-hidden rounded-xl border border-line bg-white shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">

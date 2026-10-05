@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -12,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
+import AdminToast from "./AdminToast.jsx";
 // The SAME data the public Lab Reports page uses (exported from pages/Labreports.jsx).
 import { fmt, subjects } from "../../pages/Labreports.jsx";
 
@@ -106,12 +106,7 @@ export default function AllLabReports() {
       title="Lab Reports"
       text="Manage lab reports for every semester and subject"
     >
-      {message && (
-        <p className="mb-4 flex items-center gap-2 rounded-lg border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-medium text-brand-700">
-          <CheckCircle2 size={16} />
-          {message}
-        </p>
-      )}
+      <AdminToast message={message} title="Lab report saved" />
 
       <section className="overflow-hidden rounded-xl border border-line bg-white shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">

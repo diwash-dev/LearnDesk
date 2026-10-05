@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -11,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
+import AdminToast from "./AdminToast.jsx";
 import { ordinal } from "../../pages/Notes.jsx";
 import { papers as pagePapers } from "../../pages/QuestionPapers.jsx";
 // Semester -> subjects lists come from the one shared subject list (no second copy).
@@ -101,12 +101,7 @@ export default function AllQuestionPapers() {
 
   return (
     <AdminLayout title="All Question Papers" text="Manage past question papers">
-      {message && (
-        <p className="mb-4 flex items-center gap-2 rounded-lg border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-medium text-brand-700">
-          <CheckCircle2 size={16} />
-          {message}
-        </p>
-      )}
+      <AdminToast message={message} title="Question paper saved" />
 
       <section className="overflow-hidden rounded-xl border border-line bg-white shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">

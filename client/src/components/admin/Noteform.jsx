@@ -1,9 +1,16 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Upload } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
-import { catalog, ordinal, semesterNumbers } from "../../pages/Notes.jsx";
-import { addNote, getNote, resourceTypes, updateNote } from "./Notestore.jsx";
+import AdminToast from "./AdminToast.jsx";
+import { ordinal } from "../../pages/Notes.jsx";
+import {
+  addNote,
+  getCatalog,
+  getNote,
+  resourceTypes,
+  updateNote,
+} from "./Notestore.jsx";
 
 const label = "mb-1.5 block text-sm font-semibold text-ink";
 const input =
@@ -12,50 +19,79 @@ const btn =
   "inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300";
 const btnLine = `${btn} border border-line bg-white text-ink hover:border-brand-300 hover:bg-brand-50`;
 
-const fmtSize = (bytes) =>
-  bytes >= 1048576
-    ? `${(bytes / 1048576).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
-
 // One form for /admin/notes/new and /admin/notes/:id/edit
 export default function NoteForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const formRef = useRef(null);
-  const existing = id ? getNote(id) : null;
+  const [existing, setExisting] = useState(null);
+  const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(Boolean(id));
+  const [toast, setToast] = useState(null);
   const [form, setForm] = useState(() => ({
     title: existing?.title ?? "",
     description: existing?.description ?? "",
-    semester: existing?.semester ?? "",
-    subject: existing?.subject ?? "",
-    resourceType: existing?.resourceType ?? "notes",
-    unit: existing?.unit ?? "",
+    semester: "",
+    subject: "",
+    resourceType: "notes",
+    unit: "",
   }));
   const [file, setFile] = useState(null);
+  const showError = useCallback((message, title = "Could not save") => {
+    setToast({
+      id: Date.now(),
+      message,
+      title,
+      tone: "error",
+    });
+  }, []);
+
+  useEffect(() => {
+    Promise.all([getCatalog(), id ? getNote(id) : Promise.resolve(null)])
+      .then(([nextCatalog, note]) => {
+        setCatalog(nextCatalog);
+        setExisting(note);
+        if (note) {
+          setForm({
+            title: note.title ?? "",
+            description: note.description ?? "",
+            semester: note.semesterId ?? "",
+            subject: note.subjectId ?? "",
+            resourceType: "notes",
+            unit: "",
+          });
+        }
+      })
+      .catch((error) =>
+        showError(error.message || "Failed to load note", "Could not load note"),
+      )
+      .finally(() => setLoading(false));
+  }, [id, showError]);
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   // Changing the semester clears the subject and swaps in that semester's subjects.
   const changeSemester = (e) =>
-    setForm((f) => ({
-      ...f,
-      semester: e.target.value ? Number(e.target.value) : "",
-      subject: "",
-    }));
+    setForm((f) => ({ ...f, semester: e.target.value, subject: "" }));
 
-  const subjects = catalog[form.semester] ?? [];
+  const subjects =
+    catalog.find((semester) => semester.id === Number(form.semester))
+      ?.subjects ?? [];
 
   const save = async (status) => {
     if (!formRef.current.reportValidity()) return;
 
     try {
-      const data = {
-        title: form.title.trim(),
-        description: form.description.trim(),
-        semesterId: Number(form.semester),
-        subjectId: Number(form.subject),
-        fileUrl: existing?.fileUrl ?? "#",
-        fileType: "PDF",
-      };
+      if (!existing && !file) {
+        showError("Please choose a PDF file.", "PDF file required");
+        return;
+      }
+
+      const data = new FormData();
+      data.append("title", form.title.trim());
+      data.append("description", form.description.trim());
+      data.append("semesterId", form.semester);
+      data.append("subjectId", form.subject);
+      if (file) data.append("file", file);
 
       if (existing) {
         await updateNote(id, data);
@@ -75,9 +111,13 @@ export default function NoteForm() {
       }
     } catch (error) {
       console.error(error);
-      alert(error.message || "Failed to save note");
+      showError(error.message || "Failed to save note");
     }
   };
+
+  if (loading) {
+    return <AdminLayout title="Edit Note">Loading note...</AdminLayout>;
+  }
 
   if (id && !existing) {
     return (
@@ -104,6 +144,13 @@ export default function NoteForm() {
           : "Upload a new note, question set or other file"
       }
     >
+      <AdminToast
+        key={toast?.id}
+        message={toast?.message}
+        title={toast?.title}
+        tone={toast?.tone}
+      />
+
       <Link
         to="/admin/notes"
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
@@ -161,9 +208,9 @@ export default function NoteForm() {
               className={`${input} h-10`}
             >
               <option value="">Select semester</option>
-              {semesterNumbers.map((n) => (
-                <option key={n} value={n}>
-                  {ordinal[n]} Semester
+              {catalog.map((semester) => (
+                <option key={semester.id} value={semester.id}>
+                  {ordinal[semester.number] ?? semester.name}
                 </option>
               ))}
             </select>
@@ -185,7 +232,7 @@ export default function NoteForm() {
                 {form.semester ? "Select subject" : "Select a semester first"}
               </option>
               {subjects.map((s) => (
-                <option key={s.slug} value={s.name}>
+                <option key={s.id} value={s.id}>
                   {s.name}
                 </option>
               ))}
@@ -243,8 +290,7 @@ export default function NoteForm() {
                       : "Choose a PDF file")}
                 </span>
                 <span className="block text-xs text-slate-500">
-                  PDF only. Files are not stored yet; a placeholder link (#) is
-                  saved.
+                  PDF only. Files are uploaded securely to Cloudinary.
                 </span>
               </span>
               <input

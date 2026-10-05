@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -11,14 +10,11 @@ import {
   Trash2,
 } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
-import {
-  catalog,
-  fmtDate,
-  ordinal,
-  semesterNumbers,
-} from "../../pages/Notes.jsx";
+import AdminToast from "./AdminToast.jsx";
+import { fmtDate, ordinal, semesterNumbers } from "../../pages/Notes.jsx";
 import {
   deleteNote,
+  getCatalog,
   getNotes,
   resourceTypes,
   typeLabel,
@@ -33,9 +29,13 @@ const cell = "hidden px-4 py-3.5 text-slate-600 lg:table-cell";
 
 export default function AllNotes() {
   const [notes, setNotes] = useState([]);
+  const [catalog, setCatalog] = useState([]);
   useEffect(() => {
-    getNotes()
-      .then(setNotes)
+    Promise.all([getNotes(), getCatalog()])
+      .then(([nextNotes, nextCatalog]) => {
+        setNotes(nextNotes);
+        setCatalog(nextCatalog);
+      })
       .catch((error) => {
         console.error(error);
       });
@@ -71,29 +71,19 @@ export default function AllNotes() {
   const start = (current - 1) * PAGE_SIZE;
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
-  const remove = (n) => {
- const remove = async (n) => {
-  if (!window.confirm(`Delete "${n.title}"? This cannot be undone.`)) return;
+  const remove = async (n) => {
+    if (!window.confirm(`Delete "${n.title}"? This cannot be undone.`)) return;
 
-  try {
-    await deleteNote(n.id);
-    setNotes((current) => current.filter((item) => item.id !== n.id));
-  } catch (error) {
-    console.error(error);
-  }
-};
-}
+    try {
+      await deleteNote(n.id);
+      setNotes((current) => current.filter((item) => item.id !== n.id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
-    <AdminLayout
-      title="All Notes"
-      text="Manage notes and other study material"
-    >
-      {message && (
-        <p className="mb-4 flex items-center gap-2 rounded-lg border border-brand-300 bg-brand-50 px-4 py-2.5 text-sm font-medium text-brand-700">
-          <CheckCircle2 size={16} />
-          {message}
-        </p>
-      )}
+    <AdminLayout title="All Notes" text="Manage notes and other study material">
+      <AdminToast message={message} title="Note saved" />
 
       <section className="overflow-hidden rounded-xl border border-line bg-white shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
@@ -136,8 +126,11 @@ export default function AllNotes() {
             <option value="">
               {filter.semester ? "All subjects" : "Select a semester first"}
             </option>
-            {(catalog[filter.semester] ?? []).map((s) => (
-              <option key={s.slug} value={s.name}>
+            {(
+              catalog.find((s) => s.number === Number(filter.semester))
+                ?.subjects ?? []
+            ).map((s) => (
+              <option key={s.id} value={s.name}>
                 {s.name}
               </option>
             ))}

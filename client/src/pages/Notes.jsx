@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   BookOpen,
@@ -388,14 +388,70 @@ export const ordinal = [
   "8th",
 ];
 export const semesterNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
-const fileCount = (n) => catalog[n].reduce((sum, s) => sum + s.files.length, 0);
+const fileCount = (n, source = catalog) =>
+  (source[n] ?? []).reduce((sum, s) => sum + s.files.length, 0);
 export const fmtDate = (iso) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
+  iso
+    ? new Date(iso).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+    : "—";
+
+const databaseCatalog = (notes) => {
+  const result = Object.fromEntries(
+    Object.entries(catalog).map(([semester, subjects]) => [
+      semester,
+      subjects.map(({ files: _files, latest: _latest, ...subject }) => ({
+        ...subject,
+        files: [],
+        latest: null,
+      })),
+    ]),
+  );
+
+  notes.forEach((note) => {
+    const semester = note.semester?.number ?? note.semesterId;
+    const subject = note.subject?.name ?? `Subject ${note.subjectId}`;
+    const subjectSlug = slugify(subject);
+    const file = {
+      id: note.id,
+      title: note.title,
+      description: note.description ?? "",
+      unit: null,
+      type: (note.fileType || "PDF").toUpperCase(),
+      resourceType: "notes",
+      pages: null,
+      size: "PDF",
+      fileUrl: note.fileUrl,
+      date: note.createdAt,
+      subject,
+      semester,
+    };
+
+    result[semester] ??= [];
+    let entry = result[semester].find((item) => item.slug === subjectSlug);
+    if (!entry) {
+      entry = {
+        name: subject,
+        slug: subjectSlug,
+        semester,
+        files: [],
+        latest: note.createdAt,
+        description: `Notes for ${subject}.`,
+      };
+      result[semester].push(entry);
+    }
+    entry.files.push(file);
+    if (new Date(note.createdAt) > new Date(entry.latest)) {
+      entry.latest = note.createdAt;
+    }
   });
+
+  return result;
+};
 
 // Resource-type filter shown above each subject's file list
 const resourceTypes = [
@@ -414,14 +470,33 @@ const typeIcons = {
 /* ---------- Page ---------- */
 
 export default function Notes() {
+  const [dbCatalog, setDbCatalog] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/notes")
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to load notes");
+        return response.json();
+      })
+      .then((notes) => setDbCatalog(databaseCatalog(notes)))
+      .catch((error) => console.error(error))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const activeCatalog = dbCatalog;
+  const availableSemesters = Object.keys(activeCatalog)
+    .map(Number)
+    .sort((a, b) => a - b);
+
   // State lives in the URL (?semester=6&subject=database-management-system),
   // so Navbar links, refresh and sharing all work on this single page.
   const [params, setParams] = useSearchParams();
 
   const semParam = Number(params.get("semester"));
   const sem =
-    Number.isInteger(semParam) && semParam >= 1 && semParam <= 8 ? semParam : 0;
-  const subjects = sem ? catalog[sem] : [];
+    Number.isInteger(semParam) && activeCatalog[semParam] ? semParam : 0;
+  const subjects = sem ? activeCatalog[sem] : [];
   const subject = sem
     ? (subjects.find((s) => s.slug === params.get("subject")) ?? subjects[0])
     : null;
@@ -475,13 +550,17 @@ export default function Notes() {
         {/* Content */}
         <section className="bg-white py-12 lg:py-16">
           <div className="wrap">
-            {sem === 0 ? (
+            {loading ? (
+              <p className="py-12 text-center text-sm text-slate-500">
+                Loading notes...
+              </p>
+            ) : sem === 0 ? (
               <div className="space-y-12">
-                {semesterNumbers.map((n) => (
+                {availableSemesters.map((n) => (
                   <div key={n}>
-                    <SemesterHeading n={n} />
+                    <SemesterHeading n={n} source={activeCatalog} />
                     <SubjectList
-                      subjects={catalog[n]}
+                      subjects={activeCatalog[n]}
                       onSelect={chooseSubject}
                       twoColumns
                     />
@@ -490,7 +569,7 @@ export default function Notes() {
               </div>
             ) : (
               <>
-                <SemesterHeading n={sem} />
+                <SemesterHeading n={sem} source={activeCatalog} />
                 <div className="grid gap-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start">
                   <div className="lg:sticky lg:top-28">
                     <SubjectList
@@ -508,7 +587,7 @@ export default function Notes() {
             )}
 
             <p className="mt-12 border-t border-line pt-6 text-sm text-slate-500">
-              Notes and files shown here are sample data for demonstration.
+              Notes and files shown here are loaded from the database.
             </p>
           </div>
         </section>
@@ -521,12 +600,12 @@ export default function Notes() {
 
 /* ---------- Pieces ---------- */
 
-function SemesterHeading({ n }) {
+function SemesterHeading({ n, source }) {
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
       <h2 className="text-2xl font-bold text-ink">{ordinal[n]} Semester</h2>
       <p className="text-sm text-slate-500">
-        {catalog[n].length} subjects, {fileCount(n)} files
+        {source[n].length} subjects, {fileCount(n, source)} files
       </p>
     </div>
   );
@@ -660,7 +739,7 @@ function SubjectFiles({ subject }) {
 }
 
 function FileRow({ f, showSubject = false }) {
-  const Icon = typeIcons[f.type];
+  const Icon = typeIcons[f.type] ?? FileText;
   const isPdf = f.type === "PDF";
   return (
     <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 px-4 py-4 transition-colors hover:bg-brand-50/50 sm:px-5 md:grid-cols-[2.5rem_minmax(0,1fr)_auto] md:items-center">
@@ -709,8 +788,7 @@ function FileRow({ f, showSubject = false }) {
           </a>
         )}
         <a
-          href={f.fileUrl}
-          download
+          href={`http://localhost:5000/api/notes/${f.id}/download`}
           aria-label={`Download ${f.title}`}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-brand-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 md:flex-none"
         >
