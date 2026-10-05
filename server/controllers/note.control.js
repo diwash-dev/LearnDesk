@@ -144,6 +144,7 @@ export const updateNote = async (req, res) => {
       description,
       semesterId: Number(semesterId),
       subjectId: Number(subjectId),
+      updatedAt: new Date(),
     };
 
     if (req.file) {

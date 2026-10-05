@@ -396,7 +396,6 @@ export const fmtDate = (iso) =>
         month: "short",
         day: "numeric",
         year: "numeric",
-        timeZone: "UTC",
       })
     : "—";
 
@@ -426,7 +425,7 @@ const databaseCatalog = (notes) => {
       pages: null,
       size: "PDF",
       fileUrl: note.fileUrl,
-      date: note.createdAt,
+      date: note.updatedAt ?? note.createdAt,
       subject,
       semester,
     };
@@ -470,8 +469,8 @@ const typeIcons = {
 /* ---------- Page ---------- */
 
 export default function Notes() {
-  const [dbCatalog, setDbCatalog] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [dbCatalog, setDbCatalog] = useState(catalog);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:5000/api/notes")
@@ -586,9 +585,7 @@ export default function Notes() {
               </>
             )}
 
-            <p className="mt-12 border-t border-line pt-6 text-sm text-slate-500">
-              Notes and files shown here are loaded from the database.
-            </p>
+          
           </div>
         </section>
       </main>
@@ -777,9 +774,9 @@ function FileRow({ f, showSubject = false }) {
       <div className="col-span-2 flex gap-2 md:col-span-1">
         {isPdf && (
           <a
-            href={f.fileUrl}
+            href={`/notes/${f.id}`}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             aria-label={`View ${f.title}`}
             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50 md:flex-none"
           >

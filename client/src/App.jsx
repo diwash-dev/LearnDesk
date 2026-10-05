@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./Home";
 import Syllabus from "./pages/Syllabus.jsx";
 import Notes from "./pages/Notes.jsx";
+import NoteViewer from "./pages/NoteViewer.jsx";
 import QuestionPapers from "./pages/QuestionPapers.jsx";
 import LabReports from "./pages/Labreports.jsx";
 import Projects from "./pages/Projects.jsx";
@@ -28,6 +29,7 @@ function App() {
         <Route path="/syllabus/:semester" element={<Syllabus />} />
         <Route path="/syllabus/:semester/:slug" element={<Syllabus />} />
         <Route path="/notes" element={<Notes />} />
+        <Route path="/notes/:id" element={<NoteViewer />} />
         <Route path="/question-papers" element={<QuestionPapers />} />
         <Route path="/question-papers/:semester" element={<QuestionPapers />} />
         <Route
