@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
 import AdminToast from "./AdminToast.jsx";
+import ConfirmDialog from "./ConfirmDialog.jsx";
 import { fmtDate, ordinal, semesterNumbers } from "../../pages/Notes.jsx";
 import {
   deleteNote,
@@ -30,6 +31,8 @@ const cell = "hidden px-4 py-3.5 text-slate-600 lg:table-cell";
 export default function AllNotes() {
   const [notes, setNotes] = useState([]);
   const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState(null);
   useEffect(() => {
     Promise.all([getNotes(), getCatalog()])
       .then(([nextNotes, nextCatalog]) => {
@@ -38,7 +41,8 @@ export default function AllNotes() {
       })
       .catch((error) => {
         console.error(error);
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
   const [filter, setFilter] = useState({ semester: "", subject: "", type: "" });
   const [page, setPage] = useState(1);
@@ -71,13 +75,18 @@ export default function AllNotes() {
   const start = (current - 1) * PAGE_SIZE;
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
-  const remove = async (n) => {
-    if (!window.confirm(`Delete "${n.title}"? This cannot be undone.`)) return;
+  const remove = (n) => setPendingDelete(n);
+
+  const confirmRemove = async () => {
+    if (!pendingDelete) return;
+    const removedNote = pendingDelete;
+    setPendingDelete(null);
+    setNotes((current) => current.filter((item) => item.id !== removedNote.id));
 
     try {
-      await deleteNote(n.id);
-      setNotes((current) => current.filter((item) => item.id !== n.id));
+      await deleteNote(removedNote.id);
     } catch (error) {
+      setNotes((current) => [removedNote, ...current]);
       console.error(error);
     }
   };
@@ -150,9 +159,13 @@ export default function AllNotes() {
           </select>
         </div>
 
-        {rows.length === 0 ? (
+        {loading ? (
           <p className="border-t border-line px-5 py-12 text-center text-sm text-slate-500">
-            No notes match these filters.
+            Loading notes...
+          </p>
+        ) : rows.length === 0 ? (
+          <p className="border-t border-line px-5 py-12 text-center text-sm text-slate-500">
+            No notes found.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -230,7 +243,7 @@ export default function AllNotes() {
                       <td className="py-3.5 pl-4 pr-5">
                         <div className="flex justify-end gap-1">
                           <a
-                            href={n.fileUrl}
+                            href={`/notes/${n.id}`}
                             target="_blank"
                             rel="noreferrer"
                             className={iconBtn}
@@ -295,6 +308,18 @@ export default function AllNotes() {
           </div>
         )}
       </section>
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Delete note?"
+        message={
+          pendingDelete
+            ? `This will permanently remove ${pendingDelete.title}. This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete note"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmRemove}
+      />
     </AdminLayout>
   );
 }

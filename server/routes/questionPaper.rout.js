@@ -4,6 +4,7 @@ import {
   getPublishedPapers,
   getAdminPapers,
   getAdminPaper,
+  viewPaper,
   downloadPaper,
   createPaper,
   updatePaper,
@@ -28,6 +29,7 @@ router.param("id", (req, res, next, value) => {
 router.get("/", getPublishedPapers);
 router.get("/admin", authMiddleware, adminOnly, getAdminPapers);
 router.get("/admin/:id", authMiddleware, adminOnly, getAdminPaper);
+router.get("/:id/view", viewPaper);
 router.get("/:id/download", downloadPaper);
 
 router.post("/", authMiddleware, adminOnly, uploadPdfFile, createPaper);

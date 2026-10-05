@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
 import AdminToast from "./AdminToast.jsx";
+import ConfirmDialog from "./ConfirmDialog.jsx";
 import { ordinal, semesterNumbers } from "../../pages/Notes.jsx";
 import { API_BASE, getCatalog, request } from "./Notestore.jsx";
 
@@ -61,6 +62,7 @@ export default function AllQuestionPapers() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState({ semester: "", subject: "" });
   const [page, setPage] = useState(1);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const message = useLocation().state?.message;
 
   useEffect(() => {
@@ -105,14 +107,18 @@ export default function AllQuestionPapers() {
   const start = (current - 1) * PAGE_SIZE;
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
-  const remove = async (p) => {
-    if (!window.confirm(`Delete "${paperLabel(p)}"? This cannot be undone.`))
-      return;
+  const remove = (p) => setPendingDelete(p);
+
+  const confirmRemove = async () => {
+    if (!pendingDelete) return;
+    const removedPaper = pendingDelete;
+    setPendingDelete(null);
+    setList((items) => items.filter((item) => item.id !== removedPaper.id));
 
     try {
-      await deletePaper(p.id);
-      setList((items) => items.filter((item) => item.id !== p.id));
+      await deletePaper(removedPaper.id);
     } catch (err) {
+      setList((items) => [removedPaper, ...items]);
       setError({
         id: Date.now(),
         title: "Could not delete",
@@ -258,7 +264,7 @@ export default function AllQuestionPapers() {
                       <td className="py-3.5 pl-4 pr-5">
                         <div className="flex justify-end gap-1">
                           <a
-                            href={p.fileUrl}
+                            href={`/question-papers/view/${p.id}`}
                             target="_blank"
                             rel="noreferrer"
                             className={iconBtn}
@@ -323,6 +329,19 @@ export default function AllQuestionPapers() {
           </div>
         )}
       </section>
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Delete question paper?"
+        message={
+          pendingDelete
+            ? `This will permanently remove ${paperLabel(pendingDelete)}. This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete paper"
+        loading={false}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmRemove}
+      />
     </AdminLayout>
   );
 }

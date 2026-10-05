@@ -111,6 +111,28 @@ export const getAdminPaper = async (req, res) => {
   }
 };
 
+export const viewPaper = async (req, res) => {
+  try {
+    const paper = await prisma.pastQuestion.findFirst({
+      where: { id: Number(req.params.id), status: "published" },
+      select: { fileUrl: true },
+    });
+
+    if (!paper) {
+      return res.status(404).json({
+        message: "Question paper not found",
+      });
+    }
+
+    return res.redirect(paper.fileUrl);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Failed to view question paper",
+    });
+  }
+};
+
 export const downloadPaper = async (req, res) => {
   try {
     const paper = await prisma.pastQuestion.findFirst({

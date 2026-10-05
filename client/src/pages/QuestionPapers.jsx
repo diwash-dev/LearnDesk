@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
-import { semesterNumbers, slugify } from "./Notes.jsx";
+import { fmtDate, semesterNumbers, slugify } from "./Notes.jsx";
 import {
   API_BASE,
   getCatalog,
@@ -82,6 +82,13 @@ const toSubjects = (catalog) =>
   );
 
 const papersFor = (papers, s) => papers.filter((p) => p.subjectId === s.id);
+const latestPaperDate = (papers) =>
+  papers.reduce((latest, paper) => {
+    const date = paper.updatedAt ?? paper.createdAt;
+    return date && (!latest || new Date(date) > new Date(latest))
+      ? date
+      : latest;
+  }, null);
 
 const crumbs = [
   { label: "Home", href: "/" },
@@ -143,8 +150,8 @@ function SubjectList({ semester, subjects, papers }) {
                         {subject.subject}
                       </span>
                       <span className="mt-1 block text-xs text-slate-500">
-                        {papersFor(papers, subject).length} papers
-                        {subject.subjectCode && ` · ${subject.subjectCode}`}
+                        {papersFor(papers, subject).length} files · Updated{" "}
+                        {fmtDate(latestPaperDate(papersFor(papers, subject)))}
                       </span>
                     </button>
                   );
@@ -205,8 +212,8 @@ function SubjectList({ semester, subjects, papers }) {
                               {s.subject}
                             </h3>
                             <span className="mt-1 block truncate text-xs text-slate-500">
-                              {list.length} papers
-                              {s.subjectCode && ` · ${s.subjectCode}`}
+                              {list.length} files · Updated{" "}
+                              {fmtDate(latestPaperDate(list))}
                             </span>
                           </div>
                           <ArrowRight
@@ -313,7 +320,7 @@ function PaperList({ subject: s, papers, compact = false }) {
 
                   <div className="flex gap-2">
                     <a
-                      href={p.fileUrl}
+                      href={`/question-papers/view/${p.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 sm:flex-none"

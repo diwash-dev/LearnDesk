@@ -4,6 +4,7 @@ import Syllabus from "./pages/Syllabus.jsx";
 import Notes from "./pages/Notes.jsx";
 import NoteViewer from "./pages/NoteViewer.jsx";
 import QuestionPapers from "./pages/QuestionPapers.jsx";
+import QuestionPaperViewer from "./pages/QuestionPaperViewer.jsx";
 import LabReports from "./pages/Labreports.jsx";
 import Projects from "./pages/Projects.jsx";
 import Dashboard from "./components/admin/Dashboard.jsx";
@@ -31,6 +32,10 @@ function App() {
         <Route path="/notes" element={<Notes />} />
         <Route path="/notes/:id" element={<NoteViewer />} />
         <Route path="/question-papers" element={<QuestionPapers />} />
+        <Route
+          path="/question-papers/view/:id"
+          element={<QuestionPaperViewer />}
+        />
         <Route path="/question-papers/:semester" element={<QuestionPapers />} />
         <Route
           path="/question-papers/:semester/:slug"
