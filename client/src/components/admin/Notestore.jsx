@@ -1,10 +1,11 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const API_BASE =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const API = `${API_BASE}/notes`;
 
 const getToken = () =>
   localStorage.getItem("adminToken") || localStorage.getItem("token");
 
-const request = async (url, options = {}) => {
+export const request = async (url, options = {}) => {
   const isFormData = options.body instanceof FormData;
   const response = await fetch(url, {
     ...options,
@@ -14,7 +15,7 @@ const request = async (url, options = {}) => {
       ...(options.headers || {}),
     },
   });
-
+  
   const data = await response.json();
 
   if (!response.ok) {

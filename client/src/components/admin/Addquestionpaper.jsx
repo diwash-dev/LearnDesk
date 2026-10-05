@@ -1,14 +1,14 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Upload } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
+import AdminToast from "./AdminToast.jsx";
 import { ordinal } from "../../pages/Notes.jsx";
+import { getCatalog } from "./Notestore.jsx";
 import {
   addPaper,
   paperTypes,
   getPaper,
-  semesterNumbers,
-  syllabusCatalog,
   updatePaper,
 } from "./Allquestionpapers.jsx";
 
@@ -19,57 +19,102 @@ const btn =
   "inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300";
 const btnLine = `${btn} border border-line bg-white text-ink hover:border-brand-300 hover:bg-brand-50`;
 
-const fmtSize = (bytes) =>
-  bytes >= 1048576
-    ? `${(bytes / 1048576).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
-
 // One form for /admin/question-papers/new and /admin/question-papers/:id/edit
 export default function AddQuestionPaper() {
   const { id } = useParams();
   const navigate = useNavigate();
   const formRef = useRef(null);
-  const existing = id ? getPaper(id) : null;
-  const [form, setForm] = useState(() => ({
-    semester: existing?.semester ?? "",
-    subject: existing?.subject ?? "",
-    year: existing?.year ?? "",
-    paperType: existing?.paperType ?? "University",
-  }));
+  const [existing, setExisting] = useState(null);
+  const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(Boolean(id));
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [form, setForm] = useState({
+    semester: "",
+    subject: "",
+    year: "",
+    paperType: "University",
+  });
   const [file, setFile] = useState(null);
+  const showError = useCallback((message, title = "Could not save") => {
+    setToast({ id: Date.now(), message, title, tone: "error" });
+  }, []);
+
+  useEffect(() => {
+    Promise.all([getCatalog(), id ? getPaper(id) : Promise.resolve(null)])
+      .then(([nextCatalog, paper]) => {
+        setCatalog(nextCatalog);
+        setExisting(paper);
+        if (paper) {
+          setForm({
+            semester: paper.semesterId,
+            subject: paper.subjectId,
+            year: paper.year,
+            paperType: paper.paperType,
+          });
+        }
+      })
+      .catch((error) =>
+        showError(
+          error.message || "Failed to load question paper",
+          "Could not load question paper",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, [id, showError]);
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   // Changing the semester clears the subject and swaps in that semester's subjects.
   const changeSemester = (e) =>
-    setForm((f) => ({
-      ...f,
-      semester: e.target.value ? Number(e.target.value) : "",
-      subject: "",
-    }));
+    setForm((f) => ({ ...f, semester: e.target.value, subject: "" }));
 
-  const subjects = syllabusCatalog[form.semester] ?? [];
+  const subjects =
+    catalog.find((semester) => semester.id === Number(form.semester))
+      ?.subjects ?? [];
 
-  const save = (status) => {
-    if (status === "draft" && !formRef.current.reportValidity()) return;
-    const data = {
-      title: existing?.title ?? `${form.year} ${form.paperType} Question Paper`,
-      semester: form.semester,
-      subject: form.subject,
-      year: Number(form.year),
-      paperType: form.paperType,
-      fileName: file ? file.name : (existing?.fileName ?? ""),
-      size: file ? fmtSize(file.size) : (existing?.size ?? "—"),
-      fileUrl: existing?.fileUrl ?? "#", // dummy until uploads are connected
-      status,
-    };
-    existing ? updatePaper(id, data) : addPaper(data);
-    navigate("/admin/question-papers", {
-      state: {
-        message:
-          status === "published" ? "Question paper published." : "Draft saved.",
-      },
-    });
+  const save = async (status) => {
+    if (!formRef.current.reportValidity()) return;
+
+    if (!existing && !file) {
+      showError("Please choose a PDF file.", "PDF file required");
+      return;
+    }
+
+    const data = new FormData();
+    data.append("semesterId", form.semester);
+    data.append("subjectId", form.subject);
+    data.append("year", form.year);
+    data.append("paperType", form.paperType);
+    data.append("status", status);
+    if (file) data.append("file", file);
+
+    setSaving(true);
+    try {
+      if (existing) await updatePaper(id, data);
+      else await addPaper(data);
+
+      navigate("/admin/question-papers", {
+        state: {
+          message:
+            status === "published"
+              ? "Question paper published."
+              : "Draft saved.",
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      showError(error.message || "Failed to save question paper");
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <AdminLayout title="Edit Question Paper">
+        Loading question paper...
+      </AdminLayout>
+    );
+  }
 
   if (id && !existing) {
     return (
@@ -96,6 +141,13 @@ export default function AddQuestionPaper() {
           : "Upload a past question paper"
       }
     >
+      <AdminToast
+        key={toast?.id}
+        message={toast?.message}
+        title={toast?.title}
+        tone={toast?.tone}
+      />
+
       <Link
         to="/admin/question-papers"
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
@@ -125,9 +177,11 @@ export default function AddQuestionPaper() {
               className={`${input} h-10`}
             >
               <option value="">Select semester</option>
-              {semesterNumbers.map((n) => (
-                <option key={n} value={n}>
-                  {ordinal[n]} Semester
+              {catalog.map((semester) => (
+                <option key={semester.id} value={semester.id}>
+                  {ordinal[semester.number]
+                    ? `${ordinal[semester.number]} Semester`
+                    : semester.name}
                 </option>
               ))}
             </select>
@@ -149,8 +203,8 @@ export default function AddQuestionPaper() {
                 {form.semester ? "Select subject" : "Select a semester first"}
               </option>
               {subjects.map((s) => (
-                <option key={s.slug} value={s.subject}>
-                  {s.subject}
+                <option key={s.id} value={s.id}>
+                  {s.name}
                 </option>
               ))}
             </select>
@@ -206,8 +260,7 @@ export default function AddQuestionPaper() {
                       : "Choose a PDF file")}
                 </span>
                 <span className="block text-xs text-slate-500">
-                  PDF only. Files are not stored yet; a placeholder link (#) is
-                  saved.
+                  PDF only. Files are uploaded securely to Cloudinary.
                 </span>
               </span>
               <input
@@ -226,14 +279,16 @@ export default function AddQuestionPaper() {
           </Link>
           <button
             type="button"
+            disabled={saving}
             onClick={() => save("draft")}
-            className={btnLine}
+            className={`${btnLine} disabled:opacity-60`}
           >
             Save as draft
           </button>
           <button
             type="submit"
-            className={`${btn} bg-brand-700 text-white hover:bg-brand-800`}
+            disabled={saving}
+            className={`${btn} bg-brand-700 text-white hover:bg-brand-800 disabled:opacity-60`}
           >
             Publish
           </button>

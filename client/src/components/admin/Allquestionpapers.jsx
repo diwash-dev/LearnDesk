@@ -11,15 +11,12 @@ import {
 } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
 import AdminToast from "./AdminToast.jsx";
-import { ordinal } from "../../pages/Notes.jsx";
-import { papers as pagePapers } from "../../pages/QuestionPapers.jsx";
-// Semester -> subjects lists come from the one shared subject list (no second copy).
-import { semesterNumbers, syllabusCatalog } from "./Allsyllabus.jsx";
+import { ordinal, semesterNumbers } from "../../pages/Notes.jsx";
+import { API_BASE, getCatalog, request } from "./Notestore.jsx";
 
-/* Question paper store (in memory, starts empty, resets on reload).
-   Record shape:
-  { id, title, semester, subject, year, paperType, description, fileName, size, fileUrl, status, date }
-   Replace these functions with API calls later (GET/POST/PUT/DELETE /api/question-papers). */
+/* Question paper store: talks to the Express API (/api/question-papers).
+   Admin record shape:
+   { id, year, paperType, status, fileUrl, pages, semester, subject, ... } */
 export const paperTypes = [
   "University",
   "College",
@@ -30,36 +27,24 @@ export const paperTypes = [
   "Other",
 ];
 
-const today = () => new Date().toISOString().slice(0, 10);
-const pagePaperItems = pagePapers.map((paper, index) => ({
-  ...paper,
-  id: index + 1,
-  title: `${paper.year} ${paper.paperType} Question Paper`,
-  subject:
-    syllabusCatalog[paper.semester]?.find((s) => s.slug === paper.subject)
-      ?.subject ?? paper.subject,
-  description: "",
-  fileName: "",
-  status: "published",
-  date: today(),
-}));
-let papers = pagePaperItems;
-let nextId = papers.length + 1;
+const API = `${API_BASE}/question-papers`;
 
-export const getPapers = () => [...papers];
-export const getPaper = (id) => papers.find((p) => p.id === Number(id));
-export const addPaper = (data) => {
-  papers = [{ ...data, id: nextId++, date: today() }, ...papers];
-};
-export const updatePaper = (id, data) => {
-  papers = papers.map((p) =>
-    p.id === Number(id) ? { ...p, ...data, date: today() } : p,
-  );
-};
-export const deletePaper = (id) => {
-  papers = papers.filter((p) => p.id !== Number(id));
-};
-export { semesterNumbers, syllabusCatalog };
+const normalizePaper = (paper) => ({
+  ...paper,
+  semester: paper.semester?.number ?? paper.semesterId,
+  subject: paper.subject?.name ?? paper.subjectId,
+});
+
+export const paperLabel = (p) => `${p.subject} ${p.year} ${p.paperType}`;
+
+export const getPapers = () =>
+  request(`${API}/admin`).then((papers) => papers.map(normalizePaper));
+export const getPaper = (id) => request(`${API}/admin/${id}`);
+export const addPaper = (data) => request(API, { method: "POST", body: data });
+export const updatePaper = (id, data) =>
+  request(`${API}/${id}`, { method: "PUT", body: data });
+export const deletePaper = (id) =>
+  request(`${API}/${id}`, { method: "DELETE" });
 
 const PAGE_SIZE = 10;
 const select =
@@ -70,10 +55,29 @@ const cell = "hidden px-4 py-3.5 text-slate-600 lg:table-cell";
 const pill = "rounded px-2 py-0.5 text-xs font-semibold";
 
 export default function AllQuestionPapers() {
-  const [list, setList] = useState(getPapers);
+  const [list, setList] = useState([]);
+  const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState({ semester: "", subject: "" });
   const [page, setPage] = useState(1);
   const message = useLocation().state?.message;
+
+  useEffect(() => {
+    Promise.all([getPapers(), getCatalog()])
+      .then(([nextPapers, nextCatalog]) => {
+        setList(nextPapers);
+        setCatalog(nextCatalog);
+      })
+      .catch((err) =>
+        setError({
+          id: Date.now(),
+          title: "Could not load question papers",
+          message: err.message || "Failed to load question papers",
+        }),
+      )
+      .finally(() => setLoading(false));
+  }, []);
 
   // Clear the "saved" message from history so it does not return on reload.
   useEffect(() => {
@@ -101,15 +105,31 @@ export default function AllQuestionPapers() {
   const start = (current - 1) * PAGE_SIZE;
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
-  const remove = (p) => {
-    if (!window.confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
-    deletePaper(p.id);
-    setList(getPapers());
+  const remove = async (p) => {
+    if (!window.confirm(`Delete "${paperLabel(p)}"? This cannot be undone.`))
+      return;
+
+    try {
+      await deletePaper(p.id);
+      setList((items) => items.filter((item) => item.id !== p.id));
+    } catch (err) {
+      setError({
+        id: Date.now(),
+        title: "Could not delete",
+        message: err.message || "Failed to delete question paper",
+      });
+    }
   };
 
   return (
     <AdminLayout title="All Question Papers" text="Manage past question papers">
       <AdminToast message={message} title="Question paper saved" />
+      <AdminToast
+        key={error?.id}
+        message={error?.message}
+        title={error?.title}
+        tone="error"
+      />
 
       <section className="overflow-hidden rounded-xl border border-line bg-white shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
@@ -154,9 +174,12 @@ export default function AllQuestionPapers() {
             <option value="">
               {filter.semester ? "All subjects" : "Select a semester first"}
             </option>
-            {(syllabusCatalog[filter.semester] ?? []).map((s) => (
-              <option key={s.slug} value={s.subject}>
-                {s.subject}
+            {(
+              catalog.find((s) => s.number === Number(filter.semester))
+                ?.subjects ?? []
+            ).map((s) => (
+              <option key={s.id} value={s.name}>
+                {s.name}
               </option>
             ))}
           </select>
@@ -164,7 +187,9 @@ export default function AllQuestionPapers() {
 
         {rows.length === 0 ? (
           <p className="border-t border-line px-5 py-12 text-center text-sm text-slate-500">
-            No question papers found.
+            {loading
+              ? "Loading question papers..."
+              : "No question papers found."}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -238,7 +263,7 @@ export default function AllQuestionPapers() {
                             rel="noreferrer"
                             className={iconBtn}
                             title="View"
-                            aria-label={`View ${p.title}`}
+                            aria-label={`View ${paperLabel(p)}`}
                           >
                             <Eye size={16} />
                           </a>
@@ -246,7 +271,7 @@ export default function AllQuestionPapers() {
                             to={`/admin/question-papers/${p.id}/edit`}
                             className={iconBtn}
                             title="Edit"
-                            aria-label={`Edit ${p.title}`}
+                            aria-label={`Edit ${paperLabel(p)}`}
                           >
                             <Pencil size={16} />
                           </Link>
@@ -255,7 +280,7 @@ export default function AllQuestionPapers() {
                             onClick={() => remove(p)}
                             className={`${iconBtn} hover:!bg-red-50 hover:!text-red-600`}
                             title="Delete"
-                            aria-label={`Delete ${p.title}`}
+                            aria-label={`Delete ${paperLabel(p)}`}
                           >
                             <Trash2 size={16} />
                           </button>

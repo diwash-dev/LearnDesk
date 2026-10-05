@@ -32,11 +32,11 @@ if (hasIndividualCredentials) {
   cloudinary.config({ cloudinary_url: process.env.CLOUDINARY_URL.trim() });
 }
 
-export const uploadPdf = (file) =>
+export const uploadPdf = (file, folder = "studyhub/notes") =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: "studyhub/notes",
+        folder,
         resource_type: "auto",
       },
       (error, result) => (error ? reject(error) : resolve(result)),
@@ -44,5 +44,19 @@ export const uploadPdf = (file) =>
 
     stream.end(file.buffer);
   });
+
+// Cleanup only: a failure is logged and never blocks the database operation.
+export const deletePdf = async (publicId) => {
+  try {
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: "image",
+    });
+    if (result.result !== "ok") {
+      console.error(`Cloudinary did not remove ${publicId}:`, result);
+    }
+  } catch (error) {
+    console.error(`Cloudinary cleanup failed for ${publicId}:`, error);
+  }
+};
 
 export default cloudinary;

@@ -305,7 +305,7 @@ const extras = {
   },
 };
 
-const slugify = (s) =>
+export const slugify = (s) =>
   s
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")

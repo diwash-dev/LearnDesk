@@ -7,11 +7,15 @@ import {
   ChevronRight,
   Download,
   Eye,
-  Info,
 } from "lucide-react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
-import { subjects, semesterNumbers } from "./Syllabus.jsx";
+import { semesterNumbers, slugify } from "./Notes.jsx";
+import {
+  API_BASE,
+  getCatalog,
+  request,
+} from "../components/admin/Notestore.jsx";
 
 function PageHeader({ crumbs, title, text, children }) {
   return (
@@ -61,53 +65,33 @@ function NotFound({ message, href, label }) {
   );
 }
 
-/* ---------- Sample question papers ----------
-   Subjects come from the sample syllabus data. Replace `papers` with a fetch to the
-   Express API later (GET /api/question-papers); `subject` is the subject slug.
-   fileUrl will point to the PDF stored on Cloudinary. */
+/* ---------- Data ----------
+   Subjects come from GET /api/catalog and papers from GET /api/question-papers
+   (published only). The subject slug is built from the subject name, the same way
+   the Notes page does it. */
 
-export const papers = subjects.flatMap((s, i) => {
-  const paperTypes = [
-    "University",
-    "College",
-    "Mid-Term",
-    "Internal",
-    "Model",
-    "Practical",
-    "Other",
-  ];
-  const rows = [
-    ...[2025, 2024, 2023, 2022].map((year, j) => [
-      year,
-      paperTypes[(i + j) % paperTypes.length],
-    ]),
-  ];
+const toSubjects = (catalog) =>
+  catalog.flatMap((sem) =>
+    sem.subjects.map((s) => ({
+      id: s.id,
+      semester: sem.number,
+      subject: s.name,
+      slug: slugify(s.name),
+      subjectCode: s.code,
+    })),
+  );
 
-  return rows.map(([year, paperType], j) => ({
-    semester: s.semester,
-    subject: s.slug,
-    year,
-    paperType,
-    pages: 3 + ((i + j * 2) % 6),
-    size: `${(0.4 + ((i * 7 + j * 5) % 17) / 10).toFixed(1)} MB`,
-    fileUrl: "#",
-  }));
-});
-
-const papersFor = (s) =>
-  papers.filter((p) => p.semester === s.semester && p.subject === s.slug);
+const papersFor = (papers, s) => papers.filter((p) => p.subjectId === s.id);
 
 const crumbs = [
   { label: "Home", href: "/" },
   { label: "Question Papers", href: "/question-papers" },
 ];
-const sampleNote =
-  "Sample data for demonstration. Papers, years and file details are placeholders.";
 
 /* ---------- Views ---------- */
 
 // Step 1 and 2: choose a semester (or All), then a subject
-function SubjectList({ semester }) {
+function SubjectList({ semester, subjects, papers }) {
   const visible = semester
     ? subjects.filter((s) => s.semester === semester)
     : subjects;
@@ -159,15 +143,17 @@ function SubjectList({ semester }) {
                         {subject.subject}
                       </span>
                       <span className="mt-1 block text-xs text-slate-500">
-                        {papersFor(subject).length} papers ·{" "}
-                        {subject.subjectCode}
+                        {papersFor(papers, subject).length} papers
+                        {subject.subjectCode && ` · ${subject.subjectCode}`}
                       </span>
                     </button>
                   );
                 })}
               </div>
             </div>
-            {selectedSubject && <PaperList subject={selectedSubject} compact />}
+            {selectedSubject && (
+              <PaperList subject={selectedSubject} papers={papers} compact />
+            )}
           </div>
         </section>
       </>
@@ -204,7 +190,7 @@ function SubjectList({ semester }) {
                   className={`mt-4 grid gap-px overflow-hidden rounded-xl border border-line bg-line shadow-soft ${!semester ? "md:grid-cols-2" : ""}`}
                 >
                   {items.map((s) => {
-                    const list = papersFor(s);
+                    const list = papersFor(papers, s);
                     return (
                       <li key={s.slug}>
                         <Link
@@ -219,7 +205,8 @@ function SubjectList({ semester }) {
                               {s.subject}
                             </h3>
                             <span className="mt-1 block truncate text-xs text-slate-500">
-                              {list.length} papers · {s.subjectCode}
+                              {list.length} papers
+                              {s.subjectCode && ` · ${s.subjectCode}`}
                             </span>
                           </div>
                           <ArrowRight
@@ -241,8 +228,8 @@ function SubjectList({ semester }) {
 }
 
 // Step 3: the papers of one subject
-function PaperList({ subject: s, compact = false }) {
-  const list = papersFor(s);
+function PaperList({ subject: s, papers, compact = false }) {
+  const list = papersFor(papers, s);
 
   useEffect(() => {
     document.title = `${s.subject} Question Papers – LearnDesk`;
@@ -264,9 +251,11 @@ function PaperList({ subject: s, compact = false }) {
           title={s.subject}
         >
           <ul className="mt-5 flex flex-wrap gap-2 text-sm text-slate-600">
-            <li className="rounded-md border border-line bg-white px-3 py-1.5 font-semibold text-ink">
-              {s.subjectCode}
-            </li>
+            {s.subjectCode && (
+              <li className="rounded-md border border-line bg-white px-3 py-1.5 font-semibold text-ink">
+                {s.subjectCode}
+              </li>
+            )}
             <li className="rounded-md border border-line bg-white px-3 py-1.5">
               Semester {s.semester}
             </li>
@@ -290,58 +279,60 @@ function PaperList({ subject: s, compact = false }) {
             <p className="text-sm text-slate-500">Newest first</p>
           </div>
 
-          <ul className="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-white shadow-soft">
-            {list.map((p) => (
-              <li
-                key={`${p.year}-${p.paperType}`}
-                className="grid gap-3 px-5 py-4 sm:grid-cols-[4.5rem_6rem_minmax(0,1fr)_auto] sm:items-center sm:gap-5"
-              >
-                {/* sm:contents lets year and paper type become grid cells on wider screens */}
-                <div className="flex items-center gap-3 sm:contents">
-                  <p className="text-lg font-bold text-ink">{p.year}</p>
-                  <span
-                    className={`w-fit rounded px-2 py-0.5 text-xs font-semibold ${
-                      p.paperType === "University"
-                        ? "bg-brand-50 text-brand-700"
-                        : "border border-line bg-white text-slate-600"
-                    }`}
-                  >
-                    {p.paperType}
-                  </span>
-                </div>
+          {list.length === 0 ? (
+            <p className="mt-4 rounded-xl border border-line px-5 py-10 text-center text-sm text-slate-500">
+              No question papers for this subject yet.
+            </p>
+          ) : (
+            <ul className="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-white shadow-soft">
+              {list.map((p) => (
+                <li
+                  key={p.id}
+                  className="grid gap-3 px-5 py-4 sm:grid-cols-[4.5rem_6rem_minmax(0,1fr)_auto] sm:items-center sm:gap-5"
+                >
+                  {/* sm:contents lets year and paper type become grid cells on wider screens */}
+                  <div className="flex items-center gap-3 sm:contents">
+                    <p className="text-lg font-bold text-ink">{p.year}</p>
+                    <span
+                      className={`w-fit rounded px-2 py-0.5 text-xs font-semibold ${
+                        p.paperType === "University"
+                          ? "bg-brand-50 text-brand-700"
+                          : "border border-line bg-white text-slate-600"
+                      }`}
+                    >
+                      {p.paperType}
+                    </span>
+                  </div>
 
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-                  <span className="rounded border border-line px-1.5 py-0.5 text-xs font-semibold text-slate-600">
-                    PDF
-                  </span>
-                  <span>{p.pages} pages</span>
-                </p>
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+                    <span className="rounded border border-line px-1.5 py-0.5 text-xs font-semibold text-slate-600">
+                      PDF
+                    </span>
+                    {p.pages && <span>{p.pages} pages</span>}
+                  </p>
 
-                <div className="flex gap-2">
-                  <a
-                    href={p.fileUrl}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 sm:flex-none"
-                  >
-                    <Eye size={15} />
-                    View
-                  </a>
-                  <a
-                    href={p.fileUrl}
-                    download
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50 sm:flex-none"
-                  >
-                    <Download size={15} />
-                    Download
-                  </a>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <p className="mt-8 flex items-start gap-2 text-sm text-slate-500">
-            <Info size={16} className="mt-0.5 shrink-0" />
-            {sampleNote}
-          </p>
+                  <div className="flex gap-2">
+                    <a
+                      href={p.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 sm:flex-none"
+                    >
+                      <Eye size={15} />
+                      View
+                    </a>
+                    <a
+                      href={`${API_BASE}/question-papers/${p.id}/download`}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50 sm:flex-none"
+                    >
+                      <Download size={15} />
+                      Download
+                    </a>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
     </>
@@ -353,16 +344,45 @@ function PaperList({ subject: s, compact = false }) {
 // Routes: /question-papers, /question-papers/:semester, /question-papers/:semester/:slug (see App.jsx)
 export default function QuestionPapers() {
   const { semester, slug } = useParams();
+  const [data, setData] = useState({ subjects: [], papers: [] });
+  const [status, setStatus] = useState("loading");
+
+  useEffect(() => {
+    Promise.all([getCatalog(), request(`${API_BASE}/question-papers`)])
+      .then(([catalog, papers]) => {
+        setData({ subjects: toSubjects(catalog), papers });
+        setStatus("ready");
+      })
+      .catch((error) => {
+        console.error(error);
+        setStatus("error");
+      });
+  }, []);
+
   const semesterNumber = semester === undefined ? null : Number(semester);
   const semesterOk =
     semesterNumber === null || semesterNumbers.includes(semesterNumber);
   const found =
     slug && semesterOk
-      ? subjects.find((s) => s.semester === semesterNumber && s.slug === slug)
+      ? data.subjects.find(
+          (s) => s.semester === semesterNumber && s.slug === slug,
+        )
       : null;
 
   let content;
-  if (!semesterOk) {
+  if (status !== "ready") {
+    content = (
+      <section className="bg-white py-16">
+        <div className="wrap text-center">
+          <p className="text-slate-600">
+            {status === "loading"
+              ? "Loading question papers..."
+              : "Unable to load question papers. Please try again later."}
+          </p>
+        </div>
+      </section>
+    );
+  } else if (!semesterOk) {
     content = (
       <NotFound
         message="Question papers are available for semesters 1 to 8."
@@ -372,7 +392,7 @@ export default function QuestionPapers() {
     );
   } else if (slug) {
     content = found ? (
-      <PaperList subject={found} />
+      <PaperList subject={found} papers={data.papers} />
     ) : (
       <NotFound
         message="That subject is not part of this semester."
@@ -381,7 +401,13 @@ export default function QuestionPapers() {
       />
     );
   } else {
-    content = <SubjectList semester={semesterNumber} />;
+    content = (
+      <SubjectList
+        semester={semesterNumber}
+        subjects={data.subjects}
+        papers={data.papers}
+      />
+    );
   }
 
   return (

@@ -112,16 +112,25 @@ model LabReport {
   user     User     @relation(fields: [uploadedBy], references: [id])
 }
 
+enum PaperStatus {
+  draft
+  published
+}
+
 model PastQuestion {
-  id          Int      @id @default(autoincrement())
-  title       String
-  year        Int
-  fileUrl     String
-  fileType    String
-  semesterId  Int
-  subjectId   Int
-  uploadedBy  Int
-  createdAt   DateTime @default(now())
+  id           Int         @id @default(autoincrement())
+  year         Int
+  paperType    String
+  status       PaperStatus @default(draft)
+  fileUrl      String
+  filePublicId String
+  fileType     String
+  pages        Int?
+  semesterId   Int
+  subjectId    Int
+  uploadedBy   Int
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   semester Semester @relation(fields: [semesterId], references: [id])
   subject  Subject  @relation(fields: [subjectId], references: [id])
