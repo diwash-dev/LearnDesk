@@ -12,41 +12,37 @@ import {
 } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
 import AdminToast from "./AdminToast.jsx";
-// The SAME data the public Lab Reports page uses (exported from pages/Labreports.jsx).
-import { fmt, subjects } from "../../pages/Labreports.jsx";
+import ConfirmDialog from "./ConfirmDialog.jsx";
+import { fmt } from "../../pages/Labreports.jsx";
+import { ordinal } from "../../pages/Notes.jsx";
+import { API_BASE, getCatalog, request } from "./Notestore.jsx";
 
 /* ---------- Data access ----------
-   Starts from the public page's `subjects`, flattened to one row per report, with the same
-   field names: no, title, description, fileType, pages, size, updated, fileUrl.
-   Added per row: id, semester, subject, status (existing reports count as published).
-   In memory only: replace these functions with API calls later
-   (GET/POST/PUT/DELETE /api/lab-reports). */
-let reports = subjects.flatMap((s) =>
-  s.reports.map((r) => ({
-    id: `${s.id}-${r.no.replace(/\s+/g, "-").toLowerCase()}`,
-    semester: s.semester,
-    subject: s.name,
-    ...r,
-    status: "published",
-  })),
-);
-export const getReports = () => [...reports];
-export const getReport = (id) => reports.find((r) => r.id === id);
-export const saveReport = (record) => {
-  reports = reports.some((r) => r.id === record.id)
-    ? reports.map((r) => (r.id === record.id ? record : r))
-    : [record, ...reports];
-};
-export const deleteReport = (id) => {
-  reports = reports.filter((r) => r.id !== id);
-};
+   Talks to the Express API (/api/lab-reports).
+   Admin record shape:
+   { id, no, title, description, status, fileUrl, pages, semester, subject, updated, ... } */
+const API = `${API_BASE}/lab-reports`;
+
+const normalizeReport = (report) => ({
+  ...report,
+  no: report.experimentNo,
+  semester: report.semester?.number ?? report.semesterId,
+  subject: report.subject?.name ?? report.subjectId,
+  updated: report.updatedAt,
+});
+
+export const getReports = () =>
+  request(`${API}/admin`).then((reports) => reports.map(normalizeReport));
+export const getReport = (id) => request(`${API}/admin/${id}`);
+export const addReport = (data) => request(API, { method: "POST", body: data });
+export const updateReport = (id, data) =>
+  request(`${API}/${id}`, { method: "PUT", body: data });
+export const deleteReport = (id) =>
+  request(`${API}/${id}`, { method: "DELETE" });
 
 /* ---------- Page ---------- */
 
 const PAGE_SIZE = 10;
-const semesterList = [...new Set(subjects.map((s) => s.semester))].sort(
-  (a, b) => a - b,
-);
 const select =
   "h-9 rounded-lg border border-line bg-white px-3 text-sm text-ink outline-none transition-colors hover:border-brand-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-surface disabled:text-slate-400";
 const iconBtn =
@@ -54,7 +50,11 @@ const iconBtn =
 const cell = "hidden px-4 py-3.5 text-slate-600 lg:table-cell";
 
 export default function AllLabReports() {
-  const [rows, setRows] = useState(getReports);
+  const [rows, setRows] = useState([]);
+  const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState({
     q: "",
     semester: "",
@@ -63,6 +63,22 @@ export default function AllLabReports() {
   });
   const [page, setPage] = useState(1);
   const message = useLocation().state?.message;
+
+  useEffect(() => {
+    Promise.all([getReports(), getCatalog()])
+      .then(([nextReports, nextCatalog]) => {
+        setRows(nextReports);
+        setCatalog(nextCatalog);
+      })
+      .catch((err) =>
+        setError({
+          id: Date.now(),
+          title: "Could not load lab reports",
+          message: err.message || "Failed to load lab reports",
+        }),
+      )
+      .finally(() => setLoading(false));
+  }, []);
 
   // Clear the "saved" message from history so it does not return on reload.
   useEffect(() => {
@@ -95,10 +111,24 @@ export default function AllLabReports() {
   const start = (current - 1) * PAGE_SIZE;
   const visible = filtered.slice(start, start + PAGE_SIZE);
 
-  const remove = (r) => {
-    if (!window.confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
-    deleteReport(r.id);
-    setRows(getReports());
+  const remove = (r) => setPendingDelete(r);
+
+  const confirmRemove = async () => {
+    if (!pendingDelete) return;
+    const removedReport = pendingDelete;
+    setPendingDelete(null);
+    setRows((items) => items.filter((item) => item.id !== removedReport.id));
+
+    try {
+      await deleteReport(removedReport.id);
+    } catch (err) {
+      setRows((items) => [removedReport, ...items]);
+      setError({
+        id: Date.now(),
+        title: "Could not delete",
+        message: err.message || "Failed to delete lab report",
+      });
+    }
   };
 
   return (
@@ -107,6 +137,12 @@ export default function AllLabReports() {
       text="Manage lab reports for every semester and subject"
     >
       <AdminToast message={message} title="Lab report saved" />
+      <AdminToast
+        key={error?.id}
+        message={error?.message}
+        title={error?.title}
+        tone="error"
+      />
 
       <section className="overflow-hidden rounded-xl border border-line bg-white shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
@@ -149,9 +185,9 @@ export default function AllLabReports() {
             className={select}
           >
             <option value="">All semesters</option>
-            {semesterList.map((n) => (
-              <option key={n} value={n}>
-                Semester {n}
+            {catalog.map((sem) => (
+              <option key={sem.id} value={sem.number}>
+                {ordinal[sem.number] ?? sem.number} Semester
               </option>
             ))}
           </select>
@@ -165,13 +201,14 @@ export default function AllLabReports() {
             <option value="">
               {filter.semester ? "All subjects" : "Select a semester first"}
             </option>
-            {subjects
-              .filter((s) => s.semester === Number(filter.semester))
-              .map((s) => (
-                <option key={s.id} value={s.name}>
-                  {s.name}
-                </option>
-              ))}
+            {(
+              catalog.find((sem) => sem.number === Number(filter.semester))
+                ?.subjects ?? []
+            ).map((s) => (
+              <option key={s.id} value={s.name}>
+                {s.name}
+              </option>
+            ))}
           </select>
           <select
             aria-label="Filter by status"
@@ -187,25 +224,29 @@ export default function AllLabReports() {
 
         {visible.length === 0 ? (
           <p className="border-t border-line px-5 py-12 text-center text-sm text-slate-500">
-            {rows.length === 0
-              ? "No lab reports yet. Use Add Lab Report to add the first one."
-              : "No lab reports match these filters."}
+            {loading
+              ? "Loading lab reports..."
+              : rows.length === 0
+                ? "No lab reports yet. Use Add Lab Report to add the first one."
+                : "No lab reports match these filters."}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-t border-line text-left text-sm lg:min-w-[56rem]">
               <thead className="hidden bg-surface text-xs font-semibold text-slate-500 lg:table-header-group">
                 <tr className="border-b border-line">
-                  <th className="py-2.5 pl-5 pr-4 font-semibold">
-                    Experiment No.
-                  </th>
-                  {["Title", "Semester", "Subject", "Updated", "Status"].map(
-                    (h) => (
-                      <th key={h} className="px-4 py-2.5 font-semibold">
-                        {h}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Title",
+                    "Experiment No.",
+                    "Semester",
+                    "Subject",
+                    "Updated",
+                    "Status",
+                  ].map((h) => (
+                    <th key={h} className="px-4 py-2.5 font-semibold">
+                      {h}
+                    </th>
+                  ))}
                   <th className="py-2.5 pl-4 pr-5 text-right font-semibold">
                     Actions
                   </th>
@@ -222,10 +263,7 @@ export default function AllLabReports() {
                       key={r.id}
                       className="transition-colors hover:bg-brand-50/50"
                     >
-                      <td className="hidden whitespace-nowrap py-3.5 pl-5 pr-4 font-semibold text-brand-700 lg:table-cell">
-                        {r.no}
-                      </td>
-                      <td className="py-3.5 pl-5 pr-4 lg:pl-4">
+                      <td className="py-3.5 pl-5 pr-4">
                         <div className="flex items-start gap-3">
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-brand-600">
                             <FileText size={16} />
@@ -246,8 +284,11 @@ export default function AllLabReports() {
                           </div>
                         </div>
                       </td>
+                      <td className="hidden whitespace-nowrap px-4 py-3.5 font-semibold text-brand-700 lg:table-cell">
+                        {r.no}
+                      </td>
                       <td className={`${cell} whitespace-nowrap`}>
-                        Sem {r.semester}
+                        {ordinal[r.semester] ?? r.semester}
                       </td>
                       <td className={cell}>{r.subject}</td>
                       <td
@@ -275,7 +316,7 @@ export default function AllLabReports() {
                             <Eye size={16} />
                           </a>
                           <Link
-                            to={`/admin/lab-reports/${encodeURIComponent(r.id)}/edit`}
+                            to={`/admin/lab-reports/${r.id}/edit`}
                             className={iconBtn}
                             title="Edit"
                             aria-label={`Edit ${r.title}`}
@@ -330,6 +371,19 @@ export default function AllLabReports() {
           </div>
         )}
       </section>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Delete lab report?"
+        message={
+          pendingDelete
+            ? `This will permanently remove ${pendingDelete.title}. This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete lab report"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmRemove}
+      />
     </AdminLayout>
   );
 }

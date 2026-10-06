@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.rout.js";
 import noteRoutes from "./routes/note.rout.js";
 import questionPaperRoutes from "./routes/questionPaper.rout.js";
 import catalogRoutes from "./routes/catalog.rout.js";
+import labReportRoutes from "./routes/labReport.rout.js";
 
 const { Pool } = pg;
 
@@ -26,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/question-papers", questionPaperRoutes);
 app.use("/api/catalog", catalogRoutes);
+app.use("/api/lab-reports", labReportRoutes);
 
 const PORT = 5000;
 

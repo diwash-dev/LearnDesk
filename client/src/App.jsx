@@ -6,6 +6,7 @@ import NoteViewer from "./pages/NoteViewer.jsx";
 import QuestionPapers from "./pages/QuestionPapers.jsx";
 import QuestionPaperViewer from "./pages/QuestionPaperViewer.jsx";
 import LabReports from "./pages/Labreports.jsx";
+import LabReportViewer from "./pages/LabReportViewer.jsx";
 import Projects from "./pages/Projects.jsx";
 import ContactPage from "./pages/Contactpages.jsx";
 import Dashboard from "./components/admin/Dashboard.jsx";
@@ -34,7 +35,7 @@ function App() {
         <Route path="/notes" element={<Notes />} />
         <Route path="/notes/:id" element={<NoteViewer />} />
         <Route path="/question-papers" element={<QuestionPapers />} />
-        
+
         <Route
           path="/question-papers/view/:id"
           element={<QuestionPaperViewer />}
@@ -45,6 +46,7 @@ function App() {
           element={<QuestionPapers />}
         />
         <Route path="/lab-reports" element={<LabReports />} />
+        <Route path="/lab-reports/view/:id" element={<LabReportViewer />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/aboutpages" element={<AboutPage />} />

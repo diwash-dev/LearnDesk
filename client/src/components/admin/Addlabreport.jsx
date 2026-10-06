@@ -1,13 +1,12 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, Upload } from "lucide-react";
 import AdminLayout from "./AdminLayout.jsx";
-import { getReport, saveReport } from "./Alllabreports.jsx";
-import { subjects } from "../../pages/Labreports.jsx";
+import AdminToast from "./AdminToast.jsx";
+import { getCatalog } from "./Notestore.jsx";
+import { addReport, getReport, updateReport } from "./Alllabreports.jsx";
+import { ordinal } from "../../pages/Notes.jsx";
 
-const semesters = [...new Set(subjects.map((s) => s.semester))].sort(
-  (a, b) => a - b,
-);
 const fmtSize = (b) =>
   b >= 1048576
     ? `${(b / 1048576).toFixed(1)} MB`
@@ -25,55 +24,98 @@ export default function AddLabReport() {
   const { id } = useParams();
   const navigate = useNavigate();
   const formRef = useRef(null);
-  const existing = id ? getReport(id) : null;
-  const [form, setForm] = useState(() => ({
-    title: existing?.title ?? "",
-    description: existing?.description ?? "",
-    semester: existing?.semester ?? "",
-    subject: existing?.subject ?? "",
-    no: existing?.no ?? "",
-    status: existing?.status ?? "draft",
-  }));
+  const [existing, setExisting] = useState(null);
+  const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(Boolean(id));
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    semester: "",
+    subject: "",
+    no: "",
+    status: "draft",
+  });
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState("");
+  const showError = useCallback((message, title = "Could not save") => {
+    setToast({ id: Date.now(), message, title, tone: "error" });
+  }, []);
+
+  useEffect(() => {
+    Promise.all([getCatalog(), id ? getReport(id) : Promise.resolve(null)])
+      .then(([nextCatalog, report]) => {
+        setCatalog(nextCatalog);
+        setExisting(report);
+        if (report) {
+          setForm({
+            title: report.title,
+            description: report.description ?? "",
+            semester: report.semesterId,
+            subject: report.subjectId,
+            no: report.experimentNo,
+            status: report.status,
+          });
+        }
+      })
+      .catch((error) =>
+        showError(
+          error.message || "Failed to load lab report",
+          "Could not load lab report",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, [id, showError]);
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   // Changing the semester clears the subject and swaps in that semester's subjects.
   const changeSemester = (e) =>
-    setForm((f) => ({
-      ...f,
-      semester: e.target.value ? Number(e.target.value) : "",
-      subject: "",
-    }));
+    setForm((f) => ({ ...f, semester: e.target.value, subject: "" }));
 
-  const save = (status) => {
+  const subjects =
+    catalog.find((semester) => semester.id === Number(form.semester))
+      ?.subjects ?? [];
+
+  const save = async (status) => {
     if (!formRef.current.reportValidity()) return;
     if (!file && !existing) {
       setFileError("Upload the PDF file.");
       return;
     }
-    // Same field names as the public Lab Reports data, plus `status`.
-    saveReport({
-      id: existing?.id ?? `local-${Date.now()}`, // a backend would assign the id
-      semester: form.semester,
-      subject: form.subject,
-      no: form.no.trim(),
-      title: form.title.trim(),
-      description: form.description.trim(),
-      fileType: file ? "PDF" : existing.fileType,
-      pages: existing?.pages ?? null,
-      size: file ? fmtSize(file.size) : existing.size,
-      updated: new Date(),
-      fileUrl: existing?.fileUrl ?? "#", // dummy until uploads are connected
-      status,
-    });
-    navigate("/admin/lab-reports", {
-      state: {
-        message:
-          status === "published" ? "Lab report published." : "Draft saved.",
-      },
-    });
+
+    const data = new FormData();
+    data.append("semesterId", form.semester);
+    data.append("subjectId", form.subject);
+    data.append("experimentNo", form.no.trim());
+    data.append("title", form.title.trim());
+    data.append("description", form.description.trim());
+    data.append("status", status);
+    if (file) data.append("file", file);
+
+    setSaving(true);
+    try {
+      if (existing) await updateReport(id, data);
+      else await addReport(data);
+
+      navigate("/admin/lab-reports", {
+        state: {
+          message:
+            status === "published" ? "Lab report published." : "Draft saved.",
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      showError(error.message || "Failed to save lab report");
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <AdminLayout title="Edit Lab Report">Loading lab report...</AdminLayout>
+    );
+  }
 
   if (id && !existing) {
     return (
@@ -100,6 +142,13 @@ export default function AddLabReport() {
           : "Add a lab report for a subject and experiment"
       }
     >
+      <AdminToast
+        key={toast?.id}
+        message={toast?.message}
+        title={toast?.title}
+        tone={toast?.tone}
+      />
+
       <Link
         to="/admin/lab-reports"
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
@@ -143,9 +192,9 @@ export default function AddLabReport() {
               className={`${input} h-10`}
             >
               <option value="">Select semester</option>
-              {semesters.map((n) => (
-                <option key={n} value={n}>
-                  Semester {n}
+              {catalog.map((semester) => (
+                <option key={semester.id} value={semester.id}>
+                  {ordinal[semester.number] ?? semester.number} Semester
                 </option>
               ))}
             </select>
@@ -166,13 +215,11 @@ export default function AddLabReport() {
               <option value="">
                 {form.semester ? "Select subject" : "Select a semester first"}
               </option>
-              {subjects
-                .filter((s) => s.semester === form.semester)
-                .map((s) => (
-                  <option key={s.id} value={s.name}>
-                    {s.name}
-                  </option>
-                ))}
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -223,7 +270,7 @@ export default function AddLabReport() {
                 <span className="block text-xs text-slate-500">
                   {file
                     ? `PDF · ${fmtSize(file.size)}`
-                    : "PDF only. Files are not stored yet; a placeholder link (#) is saved."}
+                    : "PDF only. Files are uploaded securely to Cloudinary."}
                 </span>
               </span>
               <input
@@ -275,14 +322,16 @@ export default function AddLabReport() {
           </Link>
           <button
             type="button"
+            disabled={saving}
             onClick={() => save("draft")}
-            className={btnLine}
+            className={`${btnLine} disabled:opacity-60`}
           >
             Save as draft
           </button>
           <button
             type="submit"
-            className={`${btn} bg-brand-700 text-white hover:bg-brand-800`}
+            disabled={saving}
+            className={`${btn} bg-brand-700 text-white hover:bg-brand-800 disabled:opacity-60`}
           >
             Publish
           </button>
