@@ -468,7 +468,7 @@ export default function Settings() {
               )}
               <dl className="divide-y divide-line rounded-lg border border-line">
                 {[
-                  ["Application", "LearnDesk"],
+                  ["Application", "StudyHub"],
                   [
                     "Environment",
                     import.meta.env.DEV ? "Development" : "Production",

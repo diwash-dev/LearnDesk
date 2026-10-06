@@ -34,7 +34,7 @@ const routes = {
   "Question Papers": "/question-papers",
   "Lab Reports": "/lab-reports",
   Projects: "/projects",
-  "About LearnDesk": "/aboutpages",
+  "About StudyHub": "/aboutpages",
   Contact: "/contact",
 };
 const allHref = (name) => routes[name] ?? "#";
@@ -65,7 +65,7 @@ const moreLinks = [
   },
   { label: "Articles", text: "Study guides and tips", icon: Newspaper },
   { label: "FAQ", text: "Common questions", icon: CircleHelp },
-  { label: "About LearnDesk", text: "What we are building", icon: Info },
+  { label: "About StudyHub", text: "What we are building", icon: Info },
   { label: "Contact", text: "Reach the team", icon: Mail },
 ];
 
@@ -75,7 +75,7 @@ export function Logo({ dark = false }) {
     <Link
       to="/"
       className="flex items-center gap-2.5"
-      aria-label="LearnDesk home"
+      aria-label="StudyHub home"
     >
       <svg
         width="32"
@@ -109,8 +109,8 @@ export function Logo({ dark = false }) {
       <span
         className={`text-[19px] font-extrabold tracking-tight ${dark ? "text-white" : "text-ink"}`}
       >
-        Learn
-        <span className={dark ? "text-brand-300" : "text-brand-600"}>Desk</span>
+        Study
+        <span className={dark ? "text-brand-300" : "text-brand-600"}>Hub</span>
       </span>
     </Link>
   );

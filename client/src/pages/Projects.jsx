@@ -238,8 +238,8 @@ export default function Projects() {
 
   useEffect(() => {
     document.title = selected
-      ? `${selected.title} – LearnDesk`
-      : "BCA Projects – LearnDesk";
+      ? `${selected.title} – StudyHub`
+      : "BCA Projects – StudyHub";
   }, [selected]);
 
   // Changing semester (selector or Navbar link) returns to the project list.

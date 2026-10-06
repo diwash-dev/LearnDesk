@@ -108,7 +108,7 @@ function SubjectList({ semester, subjects, papers }) {
   }));
 
   useEffect(() => {
-    document.title = "BCA Question Papers – LearnDesk";
+    document.title = "BCA Question Papers – StudyHub";
   }, []);
 
   const [selectedSubject, setSelectedSubject] = useState(visible[0] ?? null);
@@ -239,7 +239,7 @@ function PaperList({ subject: s, papers, compact = false }) {
   const list = papersFor(papers, s);
 
   useEffect(() => {
-    document.title = `${s.subject} Question Papers – LearnDesk`;
+    document.title = `${s.subject} Question Papers – StudyHub`;
   }, [s]);
 
   return (

@@ -3,7 +3,7 @@
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
-  /* LearnDesk blue system: use these instead of raw Tailwind blues */
+  /* StudyHub blue system: use these instead of raw Tailwind blues */
   --color-brand-50: #f2f6ff;
   --color-brand-100: #e4ecff;
   --color-brand-200: #c9d8ff;
@@ -17,8 +17,10 @@
   --color-surface: #f6f9ff;
   --color-line: #dfe6f4;
 
-  --shadow-soft: 0 1px 2px rgb(14 22 51 / 0.05), 0 6px 20px -6px rgb(14 22 51 / 0.1);
-  --shadow-lift: 0 2px 4px rgb(14 22 51 / 0.05), 0 18px 40px -12px rgb(14 22 51 / 0.22);
+  --shadow-soft:
+    0 1px 2px rgb(14 22 51 / 0.05), 0 6px 20px -6px rgb(14 22 51 / 0.1);
+  --shadow-lift:
+    0 2px 4px rgb(14 22 51 / 0.05), 0 18px 40px -12px rgb(14 22 51 / 0.22);
 }
 
 html {
@@ -78,13 +80,15 @@ h3 {
 
 /* Faint ruled-paper grid for decorative panels */
 .bg-grid {
-  background-image: linear-gradient(to right, rgb(255 255 255 / 0.07) 1px, transparent 1px),
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.07) 1px, transparent 1px),
     linear-gradient(to bottom, rgb(255 255 255 / 0.07) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
 .bg-grid-light {
-  background-image: linear-gradient(to right, rgb(47 79 196 / 0.07) 1px, transparent 1px),
+  background-image:
+    linear-gradient(to right, rgb(47 79 196 / 0.07) 1px, transparent 1px),
     linear-gradient(to bottom, rgb(47 79 196 / 0.07) 1px, transparent 1px);
   background-size: 28px 28px;
 }

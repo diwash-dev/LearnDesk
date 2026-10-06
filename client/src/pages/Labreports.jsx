@@ -256,8 +256,8 @@ export default function LabReports() {
 
   useEffect(() => {
     document.title = selected
-      ? `${selected.name} Lab Reports – LearnDesk`
-      : "BCA Lab Reports – LearnDesk";
+      ? `${selected.name} Lab Reports – StudyHub`
+      : "BCA Lab Reports – StudyHub";
   }, [selected]);
 
   // Changing semester (Navbar link) returns to the subject list.

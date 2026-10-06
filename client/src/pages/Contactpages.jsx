@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 
 /*
-  LearnDesk Contact Us page (single file, React + Tailwind, no extra dependencies).
+  StudyHub Contact Us page (single file, React + Tailwind, no extra dependencies).
   Navbar and footer are NOT included: render this inside your existing layout.
   Edit the palette once in THEME (blue, white, slate).
 
@@ -33,7 +33,7 @@ const ITEMS = [
   {
     title: "General Support",
     category: "General Support",
-    text: "Questions about using LearnDesk and its resources.",
+    text: "Questions about using StudyHub and its resources.",
     icon: "M8.5 9a3.5 3.5 0 1 1 5 3.2c-.9.5-1.5 1-1.5 2M12 18h.01",
   },
   {
@@ -45,7 +45,7 @@ const ITEMS = [
   {
     title: "Feedback & Suggestions",
     category: "Feedback & Suggestion",
-    text: "Share ideas that can help improve LearnDesk.",
+    text: "Share ideas that can help improve StudyHub.",
     icon: "M9 18h6m-5 3h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z",
   },
 ];
@@ -158,7 +158,7 @@ export default function ContactPage({ onSubmit }) {
           <div className="max-w-xl">
             <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-(--p)">
               <span aria-hidden="true" className="h-px w-6 bg-(--p)" />
-              LearnDesk · Contact
+              StudyHub · Contact
             </p>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">
               How can we help?
@@ -195,7 +195,7 @@ export default function ContactPage({ onSubmit }) {
             Contact &amp; Support
           </h2>
           <p className="mt-3 max-w-md leading-relaxed text-(--mute)">
-            Contact LearnDesk with questions, problems, or suggestions. Choose
+            Contact StudyHub with questions, problems, or suggestions. Choose
             what fits best and we’ll take it from there.
           </p>
 

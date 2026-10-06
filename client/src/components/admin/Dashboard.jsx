@@ -92,7 +92,7 @@ export default function Dashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Admin Dashboard - LearnDesk";
+    document.title = "Admin Dashboard - StudyHub";
   }, []);
 
   // Mobile drawer: close on Escape and stop the page behind it from scrolling.
@@ -121,7 +121,7 @@ export default function Dashboard() {
       <div className="lg:pl-64">
         <AdminHeader
           title="Dashboard"
-          text="Overview of everything published on LearnDesk"
+          text="Overview of everything published on StudyHub"
           onMenu={() => setMenuOpen(true)}
         />
 

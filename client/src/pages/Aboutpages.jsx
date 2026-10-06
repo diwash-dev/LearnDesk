@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 
 /*
-  LearnDesk About page (single file, React + Tailwind, no extra dependencies).
+  StudyHub About page (single file, React + Tailwind, no extra dependencies).
   Navbar and footer are NOT included: render this inside your existing layout.
   Palette lives in THEME (blue, white, slate). No statistics, people,
   testimonials or history are invented; only the four capabilities you listed appear.
@@ -234,14 +234,14 @@ export default function AboutPage() {
         <div className="relative mx-auto max-w-3xl px-6 py-16 text-center sm:py-24">
           <p className={label}>
             <span aria-hidden="true" className="h-px w-6 bg-(--p)" />
-            About LearnDesk
+            About StudyHub
             <span aria-hidden="true" className="h-px w-6 bg-(--p)" />
           </p>
           <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
             Everything you need for your academic journey, in one place.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-(--mute) sm:text-lg">
-            LearnDesk brings essential academic resources together in a simple,
+            StudyHub brings essential academic resources together in a simple,
             organized space designed around the everyday needs of students.
           </p>
         </div>
@@ -256,7 +256,7 @@ export default function AboutPage() {
           </h2>
           <p className="mt-5 max-w-md leading-relaxed text-(--mute)">
             Students often work with notes, PDFs, syllabi, results, and other
-            academic resources spread across different places. LearnDesk is
+            academic resources spread across different places. StudyHub is
             designed to bring these resources into one organized learning space.
           </p>
           <ol className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3 text-sm font-medium">
@@ -297,7 +297,7 @@ export default function AboutPage() {
           <div className="rounded-2xl border border-(--line) bg-white p-3 shadow-[0_20px_40px_-28px_rgb(14_26_54/0.35)]">
             <div className="mb-1 flex items-center gap-2 border-b border-(--line) pb-2.5 text-xs font-semibold">
               <span className="h-3.5 w-3.5 rounded bg-(--p)" />
-              LearnDesk
+              StudyHub
             </div>
             {SCATTER.map(([t]) => (
               <div
@@ -400,11 +400,11 @@ export default function AboutPage() {
         </ol>
       </section>
 
-      {/* 05 Why LearnDesk */}
+      {/* 05 Why StudyHub */}
       <section className="border-t border-(--line)">
         <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
           <div data-reveal className={`${reveal} max-w-3xl`}>
-            <p className={label}>Why LearnDesk</p>
+            <p className={label}>Why StudyHub</p>
             <h2 className="mt-4 text-3xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
               Built around the way students actually study.
             </h2>
@@ -452,7 +452,7 @@ export default function AboutPage() {
             Make academic resources easier to discover, access, and organize.
           </p>
           <p className="mx-auto mt-6 max-w-lg leading-relaxed text-(--mute)">
-            LearnDesk aims to make the everyday process of finding, using, and
+            StudyHub aims to make the everyday process of finding, using, and
             keeping academic resources simpler for students.
           </p>
         </div>

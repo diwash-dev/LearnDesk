@@ -168,11 +168,11 @@ const articles = [
 
 const faqs = [
   {
-    q: "What is LearnDesk?",
-    a: "LearnDesk is a library of academic resources: notes, syllabus, question papers, lab reports and projects, organized by semester and subject so you can find what you need quickly.",
+    q: "What is StudyHub?",
+    a: "StudyHub is a library of academic resources: notes, syllabus, question papers, lab reports and projects, organized by semester and subject so you can find what you need quickly.",
   },
   {
-    q: "Who can use LearnDesk?",
+    q: "Who can use StudyHub?",
     a: "Any college student can browse and download resources. Faculty and admins upload and manage the files.",
   },
   {
@@ -256,10 +256,10 @@ export default function Home() {
               <h1 className="mt-5 text-[2.6rem] font-extrabold leading-[1.04] text-ink sm:text-6xl lg:text-[3.25rem] xl:text-[4.25rem]">
                 <span className="block">Your Semester.</span>
                 <span className="block">Your Resources.</span>
-                <span className="block">One Desk.</span>
+                <span className="block">One Hub.</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
-                LearnDesk keeps your notes, syllabus, question papers, lab
+                StudyHub keeps your notes, syllabus, question papers, lab
                 reports and projects in one place, sorted by semester and
                 subject, so you spend your time studying instead of searching.
               </p>
@@ -560,7 +560,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Why LearnDesk */}
+        {/* Why StudyHub */}
         <section className="bg-grid bg-brand-900 py-20 text-white lg:py-24">
           <div className="wrap">
             <h2 className="max-w-xl text-3xl font-bold sm:text-4xl">
@@ -672,7 +672,7 @@ export default function Home() {
                 Questions students ask
               </h2>
               <p className="mt-3 leading-relaxed text-slate-600">
-                Cannot find your answer? Contact the LearnDesk team.
+                Cannot find your answer? Contact the StudyHub team.
               </p>
               <a
                 href="#"

@@ -15,7 +15,7 @@ const columns = [
   },
   {
     title: "Quick Links",
-    links: ["Home", "Browse by Semester", "Articles", "FAQ", "About LearnDesk"],
+    links: ["Home", "Browse by Semester", "Articles", "FAQ", "About StudyHub"],
   },
   {
     title: "Support",
@@ -118,7 +118,7 @@ export default function Footer() {
 
       <div className="border-t border-white/10">
         <div className="wrap flex flex-col gap-1 py-5 text-xs text-slate-500 sm:flex-row sm:justify-between">
-          <p>© {new Date().getFullYear()} LearnDesk. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} StudyHub. All rights reserved.</p>
           <p>Built for college students in Nepal.</p>
         </div>
       </div>
