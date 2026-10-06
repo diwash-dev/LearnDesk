@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Search,
   ChevronDown,
   Menu,
   X,
@@ -117,7 +116,7 @@ export function Logo({ dark = false }) {
 }
 
 const navItem =
-  "flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-brand-50 hover:text-brand-700";
+  "flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-2 text-[15px] font-medium text-slate-600 transition-colors hover:bg-brand-50 hover:text-brand-700";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -248,7 +247,7 @@ export default function Navbar() {
                           <Icon size={16} />
                         </span>
                         <span>
-                          <span className="block text-sm font-semibold text-ink">
+                          <span className="block text-[15px] font-semibold text-ink">
                             {label}
                           </span>
                           <span className="block text-xs text-slate-500">
@@ -265,27 +264,21 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {/* Search is visual only for now */}
+          {/* Search is disabled until search functionality is implemented.
           <button
             className="flex h-9 w-9 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
             aria-label="Search"
           >
             <Search size={18} />
           </button>
+          */}
           <Link
             to="/admin/login"
-            className="hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50 xl:flex"
+            className="hidden items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-700 px-3.5 py-2 text-[15px] font-semibold text-white transition-colors hover:bg-brand-800 xl:flex"
           >
             <LogIn size={15} />
             Admin Login
           </Link>
-          {/* Plain anchor so "/#categories" also works from other pages */}
-          <a
-            href="/#categories"
-            className="hidden rounded-md bg-brand-700 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 xl:block"
-          >
-            Browse Resources
-          </a>
           <button
             className="flex h-9 w-9 items-center justify-center rounded-md text-ink transition-colors hover:bg-brand-50 xl:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -304,6 +297,7 @@ export default function Navbar() {
       >
         <div className="overflow-hidden">
           <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto border-t border-line px-4 pb-6 pt-4">
+            {/* Search is disabled until search functionality is implemented.
             <label className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2.5 text-slate-500">
               <Search size={16} />
               <input
@@ -312,6 +306,7 @@ export default function Navbar() {
                 className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-slate-400"
               />
             </label>
+            */}
 
             <ul className="mt-3 divide-y divide-line">
               <li>
@@ -398,7 +393,7 @@ export default function Navbar() {
 
             <Link
               to="/admin/login"
-              className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-line py-2.5 text-sm font-semibold text-ink hover:bg-brand-50"
+              className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-brand-700 py-2.5 text-[15px] font-semibold text-white hover:bg-brand-800"
             >
               <LogIn size={16} />
               Admin Login

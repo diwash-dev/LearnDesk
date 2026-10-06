@@ -1,6 +1,5 @@
 import {
   ArrowRight,
-  ArrowUpRight,
   Download,
   Clock,
   ClipboardList,
@@ -107,19 +106,6 @@ const resources = [
     date: "2026-09-18",
   },
 ];
-
-// Subject and file counts will come from the API later.
-const semesters = [
-  { n: 1, name: "First", subjects: 6, files: 96 },
-  { n: 2, name: "Second", subjects: 6, files: 104 },
-  { n: 3, name: "Third", subjects: 7, files: 128 },
-  { n: 4, name: "Fourth", subjects: 6, files: 117 },
-  { n: 5, name: "Fifth", subjects: 7, files: 142 },
-  { n: 6, name: "Sixth", subjects: 6, files: 131 },
-  { n: 7, name: "Seventh", subjects: 5, files: 88 },
-  { n: 8, name: "Eighth", subjects: 4, files: 64 },
-];
-const activeSemester = 6; // later: the semester the student last opened
 
 const features = [
   {
@@ -272,12 +258,13 @@ export default function Home() {
                   Explore Resources
                   <ArrowRight size={17} />
                 </a>
-                <a
-                  href="#semesters"
+                <Link
+                  to="/syllabus"
                   className="inline-flex items-center justify-center rounded-lg border border-line bg-white px-6 py-3.5 text-[15px] font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50"
                 >
                   Browse by Semester
-                </a>
+                  <ArrowRight size={17} />
+                </Link>
               </div>
 
               <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-3 border-t border-line pt-6 text-sm font-medium text-slate-600">
@@ -406,14 +393,14 @@ export default function Home() {
                   <FeaturedIcon size={24} />
                 </span>
                 <div>
-                  <p className="text-sm text-brand-200">
+                  <p className="text-base text-brand-200">
                     {countLabel(featured)}
                   </p>
-                  <h3 className="mt-1 text-3xl font-bold">{featured.title}</h3>
-                  <p className="mt-2 max-w-xs leading-relaxed text-brand-100/80">
+                  <h3 className="mt-1 text-4xl font-bold">{featured.title}</h3>
+                  <p className="mt-2 max-w-xs text-lg leading-relaxed text-brand-100/80">
                     {featured.text}
                   </p>
-                  <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold">
+                  <span className="mt-6 inline-flex items-center gap-2 text-base font-semibold">
                     Open {featured.title}
                     <ArrowRight
                       size={16}
@@ -443,14 +430,14 @@ export default function Home() {
                         <Icon size={20} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block font-semibold text-ink">
+                        <span className="block text-base font-semibold text-ink">
                           {c.title}
                         </span>
-                        <span className="block truncate text-sm text-slate-500">
+                        <span className="block truncate text-[15px] text-slate-500">
                           {c.text}
                         </span>
                       </span>
-                      <span className="hidden text-sm text-slate-500 sm:block">
+                      <span className="hidden text-[15px] text-slate-500 sm:block">
                         {countLabel(c)}
                       </span>
                       <ArrowRight
@@ -500,62 +487,6 @@ export default function Home() {
                   <ResourceCard key={r.title} {...r} />
                 ))}
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Browse by semester */}
-        <section
-          id="semesters"
-          className="scroll-mt-20 bg-white py-20 lg:py-24"
-        >
-          <div className="wrap">
-            <SectionHead
-              title="Browse by semester"
-              text="Pick your semester to see its subjects and files."
-            />
-
-            <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
-              {semesters.map((s) => {
-                const active = s.n === activeSemester;
-                return (
-                  <a
-                    key={s.n}
-                    href="#"
-                    className={`group flex flex-col justify-between rounded-xl border p-5 transition ${
-                      active
-                        ? "border-brand-700 bg-brand-700 text-white shadow-lift"
-                        : "border-line bg-white hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-soft"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <span
-                        className={`text-4xl font-extrabold leading-none ${active ? "text-white" : "text-brand-700"}`}
-                      >
-                        {s.n}
-                      </span>
-                      {active ? (
-                        <span className="rounded bg-white/15 px-2 py-0.5 text-xs font-semibold">
-                          Current
-                        </span>
-                      ) : (
-                        <ArrowUpRight
-                          size={16}
-                          className="text-slate-300 transition-colors group-hover:text-brand-600"
-                        />
-                      )}
-                    </div>
-                    <div className="mt-8">
-                      <p className="font-semibold">{s.name} Semester</p>
-                      <p
-                        className={`mt-1 text-sm ${active ? "text-brand-200" : "text-slate-500"}`}
-                      >
-                        {s.subjects} subjects, {s.files} files
-                      </p>
-                    </div>
-                  </a>
-                );
-              })}
             </div>
           </div>
         </section>
@@ -675,7 +606,7 @@ export default function Home() {
                 Cannot find your answer? Contact the StudyHub team.
               </p>
               <a
-                href="#"
+                href="/contact"
                 className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
               >
                 Contact us

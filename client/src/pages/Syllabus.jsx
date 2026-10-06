@@ -526,10 +526,6 @@ function List({ sem }) {
             );
           })}
 
-          <p className="border-t border-line pt-6 text-sm text-slate-500">
-            Syllabus content shown here is sample data for demonstration. Always
-            confirm details against the official university syllabus.
-          </p>
         </div>
       </section>
     </>

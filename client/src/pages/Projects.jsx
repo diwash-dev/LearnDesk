@@ -7,7 +7,6 @@ import {
   Download,
   Eye,
   FileText,
-  Info,
 } from "lucide-react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
@@ -65,9 +64,6 @@ export const projects = Object.entries(raw).flatMap(([sem, list]) =>
     };
   }),
 );
-
-const sampleNote =
-  "Sample data for demonstration. Projects and document details are placeholders.";
 
 /* ---------- Pieces ---------- */
 
@@ -215,10 +211,6 @@ function ProjectDetail({ p, onBack }) {
           ))}
         </ul>
 
-        <p className="mt-8 flex items-start gap-2 text-sm text-slate-500">
-          <Info size={16} className="mt-0.5 shrink-0" />
-          {sampleNote}
-        </p>
       </div>
     </section>
   );
@@ -294,10 +286,6 @@ export default function Projects() {
                   ))}
                 </ul>
 
-                <p className="mt-8 flex items-start gap-2 text-sm text-slate-500">
-                  <Info size={16} className="mt-0.5 shrink-0" />
-                  {sampleNote}
-                </p>
               </div>
             </section>
           </>
