@@ -76,35 +76,12 @@ export function Logo({ dark = false }) {
       className="flex items-center gap-2.5"
       aria-label="StudyHub home"
     >
-      <svg
-        width="32"
-        height="32"
-        viewBox="0 0 32 32"
-        fill="none"
+      <img
+        src="/LOGO.png"
+        alt=""
         aria-hidden="true"
-      >
-        <rect
-          width="32"
-          height="32"
-          rx="8"
-          className={dark ? "fill-brand-500" : "fill-brand-700"}
-        />
-        <path
-          d="M9.5 7.5h8.2l5.3 5.3v11a1.5 1.5 0 0 1-1.5 1.5H9.5A1.5 1.5 0 0 1 8 23.8V9A1.5 1.5 0 0 1 9.5 7.5Z"
-          fill="#fff"
-        />
-        <path
-          d="M17.7 7.5v4.1a1.2 1.2 0 0 0 1.2 1.2H23"
-          className="stroke-brand-300"
-          strokeWidth="1.4"
-        />
-        <path
-          d="M11.5 17h9M11.5 20.2h6"
-          className="stroke-brand-600"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-      </svg>
+        className="h-8 w-8 rounded-lg object-cover"
+      />
       <span
         className={`text-[19px] font-extrabold tracking-tight ${dark ? "text-white" : "text-ink"}`}
       >
