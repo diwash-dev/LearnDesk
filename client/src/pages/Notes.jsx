@@ -470,8 +470,8 @@ const typeIcons = {
 /* ---------- Page ---------- */
 
 export default function Notes() {
-  const [dbCatalog, setDbCatalog] = useState(catalog);
-  const [loading, setLoading] = useState(false);
+  const [dbCatalog, setDbCatalog] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${API_BASE}/notes`)
@@ -480,7 +480,10 @@ export default function Notes() {
         return response.json();
       })
       .then((notes) => setDbCatalog(databaseCatalog(notes)))
-      .catch((error) => console.error(error))
+      .catch((error) => {
+        console.error(error);
+        setDbCatalog({});
+      })
       .finally(() => setLoading(false));
   }, []);
 
