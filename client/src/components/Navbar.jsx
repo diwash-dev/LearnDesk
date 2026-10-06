@@ -272,13 +272,13 @@ export default function Navbar() {
           >
             <Search size={18} />
           </button>
-          <a
-            href="#"
+          <Link
+            to="/admin/login"
             className="hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-line px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-300 hover:bg-brand-50 xl:flex"
           >
             <LogIn size={15} />
             Admin Login
-          </a>
+          </Link>
           {/* Plain anchor so "/#categories" also works from other pages */}
           <a
             href="/#categories"
@@ -396,13 +396,13 @@ export default function Navbar() {
               })}
             </ul>
 
-            <a
-              href="#"
+            <Link
+              to="/admin/login"
               className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-line py-2.5 text-sm font-semibold text-ink hover:bg-brand-50"
             >
               <LogIn size={16} />
               Admin Login
-            </a>
+            </Link>
           </div>
         </div>
       </div>

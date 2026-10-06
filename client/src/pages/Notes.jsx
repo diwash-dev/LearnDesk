@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import { API_BASE } from "../components/admin/Notestore.jsx";
 
 /* ---------- Sample data ----------
    SAMPLE / DUMMY records for UI development only.
@@ -473,7 +474,7 @@ export default function Notes() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/notes")
+    fetch(`${API_BASE}/notes`)
       .then((response) => {
         if (!response.ok) throw new Error("Failed to load notes");
         return response.json();
@@ -584,8 +585,6 @@ export default function Notes() {
                 </div>
               </>
             )}
-
-          
           </div>
         </section>
       </main>
@@ -785,7 +784,7 @@ function FileRow({ f, showSubject = false }) {
           </a>
         )}
         <a
-          href={`http://localhost:5000/api/notes/${f.id}/download`}
+          href={`${API_BASE}/notes/${f.id}/download`}
           aria-label={`Download ${f.title}`}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-brand-700 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800 md:flex-none"
         >

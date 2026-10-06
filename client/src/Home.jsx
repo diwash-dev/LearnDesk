@@ -12,10 +12,12 @@ import {
   Library,
   Zap,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import ResourceCard, { categoryIcons } from "./components/ResourceCard.jsx";
+import { API_BASE } from "./components/admin/Notestore.jsx";
 
 /* ---------- Static data ---------- */
 
@@ -211,6 +213,33 @@ export default function Home() {
   const [featured, ...restCategories] = categories;
   const FeaturedIcon = categoryIcons[featured.title];
   const [leadArticle, ...otherArticles] = articles;
+  const [resourceCounts, setResourceCounts] = useState({});
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`${API_BASE}/notes`).then((response) => response.json()),
+      fetch(`${API_BASE}/question-papers`).then((response) => response.json()),
+      fetch(`${API_BASE}/lab-reports`).then((response) => response.json()),
+      fetch(`${API_BASE}/catalog`).then((response) => response.json()),
+    ])
+      .then(([notes, papers, reports, catalog]) =>
+        setResourceCounts({
+          Notes: notes.length,
+          Syllabus: catalog.reduce(
+            (total, semester) => total + semester.subjects.length,
+            0,
+          ),
+          "Question Papers": papers.length,
+          "Lab Reports": reports.length,
+        }),
+      )
+      .catch(() => setResourceCounts({}));
+  }, []);
+
+  const countLabel = (category) =>
+    resourceCounts[category.title] == null
+      ? category.count
+      : `${resourceCounts[category.title]} files`;
 
   return (
     <>
@@ -370,14 +399,16 @@ export default function Home() {
 
             <div className="mt-12 grid gap-6 lg:grid-cols-12">
               <a
-                href="#"
+                href="/notes"
                 className="bg-grid group relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-xl bg-brand-900 p-7 text-white lg:col-span-5"
               >
                 <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/10 text-brand-100">
                   <FeaturedIcon size={24} />
                 </span>
                 <div>
-                  <p className="text-sm text-brand-200">{featured.count}</p>
+                  <p className="text-sm text-brand-200">
+                    {countLabel(featured)}
+                  </p>
                   <h3 className="mt-1 text-3xl font-bold">{featured.title}</h3>
                   <p className="mt-2 max-w-xs leading-relaxed text-brand-100/80">
                     {featured.text}
@@ -396,11 +427,18 @@ export default function Home() {
                 {restCategories.map((c) => {
                   const Icon = categoryIcons[c.title];
                   return (
-                  <Link
-  key={c.title}
-  to={c.title === "Syllabus" ? "/syllabus" : "#"}
-  className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-brand-50/70"
->
+                    <Link
+                      key={c.title}
+                      to={
+                        {
+                          Syllabus: "/syllabus",
+                          "Question Papers": "/question-papers",
+                          "Lab Reports": "/lab-reports",
+                          Projects: "/projects",
+                        }[c.title] || "#"
+                      }
+                      className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-brand-50/70"
+                    >
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 transition-colors group-hover:bg-white">
                         <Icon size={20} />
                       </span>
@@ -413,7 +451,7 @@ export default function Home() {
                         </span>
                       </span>
                       <span className="hidden text-sm text-slate-500 sm:block">
-                        {c.count}
+                        {countLabel(c)}
                       </span>
                       <ArrowRight
                         size={16}

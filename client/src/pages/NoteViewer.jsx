@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { API_BASE } from "../components/admin/Notestore.jsx";
 
 export default function NoteViewer() {
   const { id } = useParams();
@@ -7,7 +8,7 @@ export default function NoteViewer() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/notes/${id}`)
+    fetch(`${API_BASE}/notes/${id}`)
       .then((response) => {
         if (!response.ok) throw new Error("Failed to load note");
         return response.json();

@@ -29,7 +29,7 @@ app.use("/api/question-papers", questionPaperRoutes);
 app.use("/api/catalog", catalogRoutes);
 app.use("/api/lab-reports", labReportRoutes);
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {

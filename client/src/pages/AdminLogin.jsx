@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
+import { API_BASE } from "../components/admin/Notestore.jsx";
 
 export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
@@ -34,16 +35,13 @@ export default function AdminLogin() {
               setLoading(true);
 
               try {
-                const res = await fetch(
-                  "http://localhost:5000/api/auth/admin/login",
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ email, password }),
+                const res = await fetch(`${API_BASE}/auth/admin/login`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
                   },
-                );
+                  body: JSON.stringify({ email, password }),
+                });
 
                 const data = await res.json();
 
