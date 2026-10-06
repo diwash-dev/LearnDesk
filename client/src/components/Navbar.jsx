@@ -34,6 +34,8 @@ const routes = {
   "Question Papers": "/question-papers",
   "Lab Reports": "/lab-reports",
   Projects: "/projects",
+  "About LearnDesk": "/aboutpages",
+  Contact: "/contact",
 };
 const allHref = (name) => routes[name] ?? "#";
 const semHref = (name, n) => {
@@ -238,8 +240,8 @@ export default function Navbar() {
                 <ul className="w-64 rounded-xl border border-line bg-white p-2 shadow-lift">
                   {moreLinks.map(({ label, text, icon: Icon }) => (
                     <li key={label}>
-                      <a
-                        href="#"
+                      <A
+                        href={allHref(label)}
                         className="group flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors hover:bg-brand-50"
                       >
                         <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-50 text-brand-600 group-hover:bg-white">
@@ -253,7 +255,7 @@ export default function Navbar() {
                             {text}
                           </span>
                         </span>
-                      </a>
+                      </A>
                     </li>
                   ))}
                 </ul>
@@ -352,8 +354,8 @@ export default function Navbar() {
                           <ul className="space-y-1 pb-3">
                             {moreLinks.map(({ label, icon: MoreIcon }) => (
                               <li key={label}>
-                                <a
-                                  href="#"
+                                <A
+                                  href={allHref(label)}
                                   className="flex items-center gap-2.5 rounded-md px-2 py-2 text-sm text-slate-600 hover:bg-brand-50"
                                 >
                                   <MoreIcon
@@ -361,7 +363,7 @@ export default function Navbar() {
                                     className="text-brand-600"
                                   />
                                   {label}
-                                </a>
+                                </A>
                               </li>
                             ))}
                           </ul>

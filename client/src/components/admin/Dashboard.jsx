@@ -92,7 +92,7 @@ export default function Dashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Admin Dashboard – LearnDesk";
+    document.title = "Admin Dashboard - LearnDesk";
   }, []);
 
   // Mobile drawer: close on Escape and stop the page behind it from scrolling.

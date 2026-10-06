@@ -7,6 +7,7 @@ import QuestionPapers from "./pages/QuestionPapers.jsx";
 import QuestionPaperViewer from "./pages/QuestionPaperViewer.jsx";
 import LabReports from "./pages/Labreports.jsx";
 import Projects from "./pages/Projects.jsx";
+import ContactPage from "./pages/Contactpages.jsx";
 import Dashboard from "./components/admin/Dashboard.jsx";
 import AllNotes from "./components/admin/Allnotes.jsx";
 import NoteForm from "./components/admin/Noteform.jsx";
@@ -20,6 +21,7 @@ import AddProject from "./components/admin/Addproject.jsx";
 import AddLabReport from "./components/admin/Addlabreport.jsx";
 import AllLabReports from "./components/admin/Alllabreports.jsx";
 import Settings from "./components/admin/Settings.jsx";
+import AboutPage from "./pages/Aboutpages.jsx";
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
         <Route path="/notes" element={<Notes />} />
         <Route path="/notes/:id" element={<NoteViewer />} />
         <Route path="/question-papers" element={<QuestionPapers />} />
+        
         <Route
           path="/question-papers/view/:id"
           element={<QuestionPaperViewer />}
@@ -43,6 +46,8 @@ function App() {
         />
         <Route path="/lab-reports" element={<LabReports />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/aboutpages" element={<AboutPage />} />
         <Route path="/admin/syllabus" element={<AllSyllabus />} />
         <Route path="/admin/syllabus/new" element={<AddSyllabus />} />
         <Route path="/admin/syllabus/:id/edit" element={<AddSyllabus />} />
